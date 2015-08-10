@@ -1,0 +1,41 @@
+<?php include $phireHeader; ?>
+    <h1 class="categories-header"><?=$title; ?></h1>
+<?php if (count($categories) > 0): ?>
+<?php if ($acl->isAllowed($user->role, 'categories', 'add')): ?>
+    <nav id="sub-nav">
+        <nav><a href="<?=$phireUri; ?>/categories/add">+ Add</a></nav>
+    </nav>
+<?php endif; ?>
+<?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?>
+    <form id="categories-form" action="<?=$phireUri . '/categories/remove'; ?>" method="post">
+<?php endif; ?>
+        <table class="data-table" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <th><a href="<?=$phireUri . '/categories?sort=id';?>">#</a></th>
+                <th><a href="<?=$phireUri . '/categories?sort=name';?>">Name</a></th>
+                <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'edit')): ?>Edit<?php else: ?>&nbsp;<?php endif; ?></th>
+                <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?><input type="checkbox" name="checkall" id="checkall" value="rm_categories" /><?php else: ?>&nbsp;<?php endif; ?></th>
+            </tr>
+<?php $i = 1; ?>
+<?php foreach ($categories as $category): ?>
+            <tr>
+                <td><?=$category->id; ?></td>
+                <td><?=$category->name; ?></td>
+                <td><?php if ($acl->isAllowed($user->role, 'categories', 'edit')): ?><a class="edit-link" href="<?=$phireUri . '/categories/edit/' . $category->id; ?>">Edit</a><?php else: ?>&nbsp;<?php endif; ?></td>
+                <td class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?><input type="checkbox" name="rm_categories[]" id="rm_categories<?=$i++; ?>" value="<?=$category->id; ?>" /><?php else: ?>&nbsp;<?php endif; ?></td>
+            </tr>
+<?php endforeach; ?>
+        </table>
+<?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?>
+        <div id="form-footer"><input type="submit" name="submit" class="process-btn" value="Remove" /></div>
+    </form>
+<?php endif; ?>
+<?php else: ?>
+<?php if ($acl->isAllowed($user->role, 'categories', 'add')): ?>
+    <nav id="sub-nav">
+        <nav><a href="<?=$phireUri; ?>/categories/add">+ Add</a></nav>
+    </nav>
+<?php endif; ?>
+    <p>There are currently no categories.</p>
+<?php endif; ?>
+<?php include $phireFooter; ?>
