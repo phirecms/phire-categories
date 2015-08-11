@@ -30,4 +30,21 @@ CREATE TABLE IF NOT EXISTS `[{prefix}]categories` (
 
 -- --------------------------------------------------------
 
+--
+-- Table structure for table "content_to_categories"
+--
+
+CREATE TABLE IF NOT EXISTS `[{prefix}]content_to_categories` (
+  `content_id` int(16) NOT NULL,
+  `category_id` int(16) NOT NULL,
+  `order` int(16) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  INDEX `category_content_id` (`content_id`),
+  INDEX `content_category_id` (`category_id`),
+  UNIQUE (`content_id`, `category_id`),
+  CONSTRAINT `fk_content_category_id` FOREIGN KEY (`category_id`) REFERENCES `[{prefix}]categories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+-- --------------------------------------------------------
+
 SET FOREIGN_KEY_CHECKS = 1;
