@@ -55,3 +55,12 @@
     background-position: left center;
     background-repeat: no-repeat;
 }
+
+.category-checkbox-value {
+    margin: 0;
+    padding: 2px;
+    font-size: 0.9em;
+    display: inline-block;
+    float: right;
+    width: 80px;
+}

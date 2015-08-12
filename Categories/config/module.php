@@ -33,6 +33,34 @@ return [
                 'name'     => 'app.route.pre',
                 'action'   => 'Categories\Event\Category::bootstrap',
                 'priority' => 1000
+            ],
+            [
+                'name'   => 'app.send',
+                'action' => 'Categories\Event\Category::getAll'
+            ],
+            [
+                'name'   => 'app.send',
+                'action' => 'Categories\Event\Category::save'
+            ],
+            [
+                'name'   => 'app.send',
+                'action' => 'Categories\Event\Category::delete'
+            ]
+        ],
+        'categories' => [
+            'content' => [
+                'form' => [
+                    'name'  => 'Content\Form\Content',
+                    'group' => 0
+                ],
+                'remove' => 'process_content'
+            ],
+            'media' => [
+                'form' => [
+                    'name'  => 'Media\Form\Media',
+                    'group' => 0
+                ],
+                'remove' => 'rm_media'
             ]
         ]
     ]
