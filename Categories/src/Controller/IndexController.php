@@ -19,9 +19,10 @@ class IndexController extends AbstractController
     {
         $this->prepareView('categories/index.phtml');
         $categories = new Model\Category();
+        $categories->getAll($this->request->getQuery('sort'));
 
-        $this->view->title     = 'Categories';
-        $this->view->categories = $categories->getAll($this->request->getQuery('sort'));
+        $this->view->title      = 'Categories';
+        $this->view->categories = $categories->getFlatMap();
 
         $this->send();
     }
@@ -37,12 +38,19 @@ class IndexController extends AbstractController
         $this->view->title = 'Categories : Add';
 
         $category = new Model\Category();
+        $category->getAll();
 
         $fields = $this->application->config()['forms']['Categories\Form\Category'];
 
-        $fields[0]['category_parent_id']['value']   = $fields[0]['category_parent_id']['value'] + $category->getParents();
+        $parents = [];
+        foreach ($category->getFlatMap() as $c) {
+            $parents[$c->id] = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) .
+                (($c->depth > 0) ? '&rarr; ' : '') . $c->title;
+        }
+
+        $fields[0]['category_parent_id']['value']   = $fields[0]['category_parent_id']['value'] + $parents;
         $fields[1]['slug']['attributes']['onkeyup'] = "phire.changeCategoryUri();";
-        $fields[1]['name']['attributes']['onkeyup'] = "phire.createSlug(this.value, '#slug'); phire.changeCategoryUri();";
+        $fields[1]['title']['attributes']['onkeyup'] = "phire.createSlug(this.value, '#slug'); phire.changeCategoryUri();";
 
         $this->view->form = new Form\Category($fields);
 
@@ -72,6 +80,7 @@ class IndexController extends AbstractController
      */
     public function edit($id)
     {
+
         $category = new Model\Category();
         $category->getById($id);
 
@@ -79,25 +88,29 @@ class IndexController extends AbstractController
             $this->redirect(BASE_PATH . APP_URI . '/categories');
         }
 
-        $this->prepareView('categories/edit.phtml');
-        $this->view->title         = 'Categories';
-        $this->view->category_name = $category->name;
+        $categories = new Model\Category();
+        $categories->getAll();
 
-        $fields = $this->application->config()['forms']['Categories\Form\Category'];
-
-        $categories = Table\Categories::findAll();
-        foreach ($categories->rows() as $cat) {
-            if ($cat->id != $id) {
-                $fields[0]['category_parent_id']['value'][$cat->id] = $cat->name;
+        $parents = [];
+        foreach ($categories->getFlatMap() as $c) {
+            if ($c->id != $id) {
+                $parents[$c->id] = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) .
+                    (($c->depth > 0) ? '&rarr; ' : '') . $c->title;
             }
         }
 
-        $fields[0]['category_parent_id']['value'] = $fields[0]['category_parent_id']['value'] + $category->getParents($id);
+        $this->prepareView('categories/edit.phtml');
+        $this->view->title         = 'Categories';
+        $this->view->category_title = $category->title;
+
+        $fields = $this->application->config()['forms']['Categories\Form\Category'];
+
+        $fields[0]['category_parent_id']['value'] = $fields[0]['category_parent_id']['value'] + $parents;
         $fields[1]['slug']['label']     .=
-            ' [ <a href="#" class="small-link" onclick="phire.createSlug(jax(\'#name\').val(), \'#slug\');' .
+            ' [ <a href="#" class="small-link" onclick="phire.createSlug(jax(\'#title\').val(), \'#slug\');' .
             ' return phire.changeCategoryUri();">Generate URI</a> ]';
 
-        $fields[1]['name']['attributes']['onkeyup'] = 'phire.changeTitle(this.value);';
+        $fields[1]['title']['attributes']['onkeyup'] = 'phire.changeTitle(this.value);';
 
         $this->view->form = new Form\Category($fields);
         $this->view->form->addFilter('htmlentities', [ENT_QUOTES, 'UTF-8'])

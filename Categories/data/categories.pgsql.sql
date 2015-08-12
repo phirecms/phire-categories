@@ -13,7 +13,7 @@ CREATE SEQUENCE category_id_seq START 11001;
 CREATE TABLE IF NOT EXISTS "[{prefix}]categories" (
   "id" integer NOT NULL DEFAULT nextval('category_id_seq'),
   "parent_id" integer,
-  "name" varchar(255) NOT NULL,
+  "title" varchar(255) NOT NULL,
   "uri" varchar(255) NOT NULL,
   "slug" varchar(255),
   "order" integer,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS "[{prefix}]categories" (
 
 ALTER SEQUENCE category_id_seq OWNED BY "[{prefix}]categories"."id";
 CREATE INDEX "category_parent_id" ON "[{prefix}]categories" ("parent_id");
-CREATE INDEX "category_name" ON "[{prefix}]categories" ("name");
+CREATE INDEX "category_title" ON "[{prefix}]categories" ("title");
 CREATE INDEX "category_uri" ON "[{prefix}]categories" ("uri");
 CREATE INDEX "category_slug" ON "[{prefix}]categories" ("slug");
 CREATE INDEX "category_order" ON "[{prefix}]categories" ("order");
@@ -37,7 +37,6 @@ CREATE INDEX "category_order" ON "[{prefix}]categories" ("order");
 CREATE TABLE IF NOT EXISTS "[{prefix}]content_to_categories" (
   "content_id" integer NOT NULL,
   "category_id" integer NOT NULL,
-  "order" integer NOT NULL,
   "type" varchar(255) NOT NULL,
   UNIQUE ("content_id", "category_id"),
   CONSTRAINT "fk_content_category_id" FOREIGN KEY ("category_id") REFERENCES "[{prefix}]categories" ("id") ON DELETE CASCADE ON UPDATE CASCADE

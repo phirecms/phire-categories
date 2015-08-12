@@ -8,6 +8,8 @@ use Phire\Model\AbstractModel;
 class Category extends AbstractModel
 {
 
+    protected $flatMap = [];
+
     /**
      * Get all categories
      *
@@ -16,18 +18,20 @@ class Category extends AbstractModel
      */
     public function getAll($sort = null)
     {
-        $order = (null !== $sort) ? $this->getSortOrder($sort) : 'id ASC';
-
-        $categoriesAry = [];
+        $order         = (null !== $sort) ? $this->getSortOrder($sort) : 'order ASC';
         $categories    = Table\Categories::findBy(['parent_id' => null], null, ['order' => $order]);
+        $categoriesAry = [];
 
         foreach ($categories->rows() as $category) {
-            $categoriesAry[] = $category;
-            $children = Table\Categories::findBy(['parent_id' => $category->id], null, ['order' => $order]);
-            foreach ($children->rows() as $child) {
-                $child->name = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; ' . $child->name;
-                $categoriesAry[] = $child;
-            }
+            $this->flatMap[] = new \ArrayObject([
+                'id'    => $category->id,
+                'title' => $category->title,
+                'uri'   => $category->uri,
+                'depth' => 0
+            ], \ArrayObject::ARRAY_AS_PROPS);
+            $category->depth    = 0;
+            $category->children = $this->getChildren($category, $order);
+            $categoriesAry[]    = $category;
         }
 
         return $categoriesAry;
@@ -61,10 +65,10 @@ class Category extends AbstractModel
         $category = new Table\Categories([
             'parent_id' => ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null),
-            'name'  => $fields['name'],
+            'title' => $fields['title'],
             'uri'   => $fields['uri'],
             'slug'  => $fields['slug'],
-            'order' => (int)$fields['slug']
+            'order' => (int)$fields['order']
         ]);
         $category->save();
 
@@ -83,11 +87,13 @@ class Category extends AbstractModel
         if (isset($category->id)) {
             $category->parent_id = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null);
-            $category->name  = $fields['name'];
+            $category->title = $fields['title'];
             $category->uri   = $fields['uri'];
             $category->slug  = $fields['slug'];
-            $category->order = (int)$fields['slug'];
+            $category->order = (int)$fields['order'];
             $category->save();
+
+            $this->changeDescendantUris($category->id, $category->uri);
 
             $this->data = array_merge($this->data, $category->getColumns());
         }
@@ -112,44 +118,6 @@ class Category extends AbstractModel
     }
 
     /**
-     * Get parents
-     *
-     * @param  int $id
-     * @return array
-     */
-    public function getParents($id = null)
-    {
-        $parents = [];
-
-        $categories = Table\Categories::findAll();
-        foreach ($categories->rows() as $c) {
-            if ($c->id != $id) {
-                $pid   = $c->parent_id;
-                $depth = 0;
-                $isAncestor = false;
-                while (null !== $pid) {
-                    if ($pid ==  $id) {
-                        $isAncestor = true;
-                        break;
-                    }
-                    $parent = Table\Categories::findById($pid);
-                    if (isset($parent->id)) {
-                        $pid = $parent->parent_id;
-                        $depth++;
-                    }
-                }
-
-                if (!$isAncestor) {
-                    $parents[$c->id] = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', $depth) .
-                        (($depth > 0) ? ' - ' : '') . $c->name;
-                }
-            }
-        }
-
-        return $parents;
-    }
-
-    /**
      * Method to get content breadcrumb
      *
      * @param  int     $id
@@ -162,14 +130,14 @@ class Category extends AbstractModel
         $breadcrumb = null;
         $categories    = Table\Categories::findById($id);
         if (isset($categories->id)) {
-            $breadcrumb = $categories->name;
+            $breadcrumb = $categories->title;
             $pId        = $categories->parent_id;
 
             while (null !== $pId) {
                 $categories = Table\Categories::findById($pId);
                 if (isset($categories->id)) {
                     if ($categories->status == 1) {
-                        $breadcrumb = '<a href="' . BASE_PATH . $categories->uri . '">' . $categories->name . '</a>' .
+                        $breadcrumb = '<a href="' . BASE_PATH . $categories->uri . '">' . $categories->title . '</a>' .
                             '<span>' . $sep . '</span>' . $breadcrumb;
                     }
                     $pId = $categories->parent_id;
@@ -178,6 +146,31 @@ class Category extends AbstractModel
         }
 
         return $breadcrumb;
+    }
+
+    /**
+     * Change the descendant URIs
+     *
+     * @param  int $id
+     * @param  string $uri
+     * @return mixed
+     */
+    protected function changeDescendantUris($id, $uri)
+    {
+        $children = Table\Categories::findBy(['parent_id' => $id]);
+
+        while ($children->count() > 0) {
+            foreach ($children->rows() as $child) {
+                $c = Table\Categories::findById($child->id);
+                if (isset($c->id)) {
+                    $c->uri = $uri . '/' . $c->slug;
+                    $c->save();
+                }
+                $children = $this->changeDescendantUris($c->id, $c->uri);
+            }
+        }
+
+        return $children;
     }
 
     /**
@@ -199,6 +192,46 @@ class Category extends AbstractModel
     public function getCount()
     {
         return Table\Categories::findAll()->count();
+    }
+
+    /**
+     * Get category flat map
+     *
+     * @return array
+     */
+    public function getFlatMap()
+    {
+        return $this->flatMap;
+    }
+
+    /**
+     * Get category children
+     *
+     * @param  \ArrayObject|array $category
+     * @param  string             $order
+     * @param  int                $depth
+     * @return array
+     */
+    protected function getChildren($category, $order, $depth = 0)
+    {
+        $children = [];
+        $child    = Table\Categories::findBy(['parent_id' => $category->id], null, ['order' => $order]);
+
+        if ($child->hasRows()) {
+            foreach ($child->rows() as $c) {
+                $this->flatMap[] = new \ArrayObject([
+                    'id'    => $c->id,
+                    'title' => $c->title,
+                    'uri'   => $c->uri,
+                    'depth' => $depth + 1
+                ], \ArrayObject::ARRAY_AS_PROPS);
+                $c->depth    = $depth + 1;
+                $c->children = $this->getChildren($c, $order, ($depth + 1));
+                $children[]  = $c;
+            }
+        }
+
+        return $children;
     }
 
 }

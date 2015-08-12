@@ -15,6 +15,9 @@ return [
                 'label' => 'Parent',
                 'value' => [
                     '----' => '----',
+                ],
+                'attributes' => [
+                    'onchange' => 'phire.changeCategoryUri();'
                 ]
             ],
             'order' => [
@@ -31,7 +34,7 @@ return [
             ]
         ],
         [
-            'name' => [
+            'title' => [
                 'type'       => 'text',
                 'label'      => 'Name',
                 'required'   => true,

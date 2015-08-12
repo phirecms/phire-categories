@@ -15,13 +15,13 @@ SET FOREIGN_KEY_CHECKS = 0;
 CREATE TABLE IF NOT EXISTS `[{prefix}]categories` (
   `id` int(16) NOT NULL AUTO_INCREMENT,
   `parent_id` int(16),
-  `name` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
   `uri` varchar(255) NOT NULL,
   `slug` varchar(255),
   `order` int(16),
   PRIMARY KEY (`id`),
   INDEX `category_parent_id` (`parent_id`),
-  INDEX `category_name` (`name`),
+  INDEX `category_title` (`title`),
   INDEX `category_uri` (`uri`),
   INDEX `category_slug` (`slug`),
   INDEX `category_order` (`order`),
@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS `[{prefix}]categories` (
 CREATE TABLE IF NOT EXISTS `[{prefix}]content_to_categories` (
   `content_id` int(16) NOT NULL,
   `category_id` int(16) NOT NULL,
-  `order` int(16) NOT NULL,
   `type` varchar(255) NOT NULL,
   INDEX `category_content_id` (`content_id`),
   INDEX `content_category_id` (`category_id`),

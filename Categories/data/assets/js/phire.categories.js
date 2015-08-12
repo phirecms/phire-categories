@@ -2,21 +2,26 @@
  * Categories Module Scripts for Phire CMS 2
  */
 
+phire.currentCategoryParentId  = '----';
+phire.currentCategoryParentUri = '';
+
 phire.changeCategoryUri = function() {
     var slug = jax('#slug').val();
-    var uri  = '';
 
-    if ((jax('#category_parent_id').val() != '----') && (jax.cookie.load('phire') != '')) {
+    if ((jax('#category_parent_id').val() != phire.currentCategoryParentId) && (jax.cookie.load('phire') != '')) {
+        phire.currentCategoryParentId = jax('#category_parent_id').val();
         var phireCookie = jax.cookie.load('phire');
         var path = phireCookie.base_path + phireCookie.app_uri;
         var json = jax.get(path + '/categories/json/' + jax('#category_parent_id').val());
-        uri = json.parent_uri;
+        phire.currentCategoryParentUri = json.parent_uri;
     }
 
-    if (slug == '') {
+    var uri = phire.currentCategoryParentUri;
+
+    if ((slug == '') && (uri == '')) {
         uri = '/';
     } else {
-        uri = uri + '/' + slug;
+        uri = uri + ((slug != '') ? '/' + slug : '');
     }
 
     jax('#uri').val(uri);

@@ -1,5 +1,5 @@
 <?php include $phireHeader; ?>
-    <h1 class="categories-header"><?=$title; ?> : <span id="title-span"><?=$category_name; ?></span></h1>
+    <h1 class="categories-header"><?=$title; ?> : <span id="title-span"><?=$category_title; ?></span></h1>
     <nav id="sub-nav">
 <?php if ($acl->isAllowed($user->role, 'categories', 'add')): ?>
         <nav><a href="<?=$phireUri; ?>/categories/add">+ Add</a></nav>
