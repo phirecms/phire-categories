@@ -62,6 +62,9 @@ return [
                 ],
                 'remove' => 'rm_media'
             ]
-        ]
+        ],
+        'separator'      => ' &gt; ',
+        'summary_length' => 150,
+        'show_total'     => true
     ]
 ];

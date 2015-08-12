@@ -14,12 +14,13 @@ class Category extends AbstractModel
      * Get all categories
      *
      * @param  string $sort
+     * @param  int    $pid
      * @return array
      */
-    public function getAll($sort = null)
+    public function getAll($sort = null, $pid = null)
     {
         $order         = (null !== $sort) ? $this->getSortOrder($sort) : 'order ASC';
-        $categories    = Table\Categories::findBy(['parent_id' => null], null, ['order' => $order]);
+        $categories    = Table\Categories::findBy(['parent_id' => $pid], null, ['order' => $order]);
         $categoriesAry = [];
 
         foreach ($categories->rows() as $category) {
@@ -54,6 +55,20 @@ class Category extends AbstractModel
         }
     }
 
+    /**
+     * Get category by URI
+     *
+     * @param  string $uri
+     * @param  boolean $fields
+     * @return void
+     */
+    public function getByUri($uri, $fields = false)
+    {
+        $category = Table\Categories::findBy(['uri' => $uri]);
+        if (isset($category->id)) {
+            $this->getCategory($category, $fields);
+        }
+    }
     /**
      * Save new category
      *
@@ -122,25 +137,23 @@ class Category extends AbstractModel
      *
      * @param  int     $id
      * @param  string  $sep
-     * @param  boolean $total
      * @return string
      */
-    public function getBreadcrumb($id, $sep = '&gt;', $total = false)
+    public function getBreadcrumb($id, $sep = '&gt;')
     {
         $breadcrumb = null;
-        $categories    = Table\Categories::findById($id);
-        if (isset($categories->id)) {
-            $breadcrumb = $categories->title;
-            $pId        = $categories->parent_id;
+        $category   = Table\Categories::findById($id);
+        if (isset($category->id)) {
+            $breadcrumb = $category->title . ((isset($this->show_total) && ($this->show_total)) ? ' (' . $this->getTotal($category->id) . ')' : null);
+            $pId        = $category->parent_id;
 
             while (null !== $pId) {
-                $categories = Table\Categories::findById($pId);
-                if (isset($categories->id)) {
-                    if ($categories->status == 1) {
-                        $breadcrumb = '<a href="' . BASE_PATH . $categories->uri . '">' . $categories->title . '</a>' .
-                            '<span>' . $sep . '</span>' . $breadcrumb;
-                    }
-                    $pId = $categories->parent_id;
+                $category = Table\Categories::findById($pId);
+                if (isset($category->id)) {
+                    $breadcrumb = '<a href="' . BASE_PATH . '/category' . $category->uri . '">' . $category->title .
+                        ((isset($this->show_total) && ($this->show_total)) ? ' (' . $this->getTotal($category->id) . ')' : null) . '</a>' .
+                        '<span>' . $sep . '</span>' . $breadcrumb;
+                    $pId = $category->parent_id;
                 }
             }
         }
@@ -149,28 +162,25 @@ class Category extends AbstractModel
     }
 
     /**
-     * Change the descendant URIs
+     * Get total number of items in category
      *
-     * @param  int $id
-     * @param  string $uri
-     * @return mixed
+     * @param  int     $id
+     * @param  boolean $rec
+     * @return int
      */
-    protected function changeDescendantUris($id, $uri)
+    public function getTotal($id, $rec = true)
     {
-        $children = Table\Categories::findBy(['parent_id' => $id]);
+        $count = Table\ContentToCategories::findBy(['category_id' => $id])->count();
+        $child = Table\Categories::findBy(['parent_id' => $id]);
 
-        while ($children->count() > 0) {
-            foreach ($children->rows() as $child) {
-                $c = Table\Categories::findById($child->id);
-                if (isset($c->id)) {
-                    $c->uri = $uri . '/' . $c->slug;
-                    $c->save();
-                }
-                $children = $this->changeDescendantUris($c->id, $c->uri);
+        if ($rec) {
+            while (isset($child->id)) {
+                $count += Table\ContentToCategories::findBy(['category_id' => $child->id])->count();
+                $child = Table\Categories::findBy(['parent_id' => $child->id]);
             }
         }
 
-        return $children;
+        return $count;
     }
 
     /**
@@ -234,4 +244,69 @@ class Category extends AbstractModel
         return $children;
     }
 
+    /**
+     * Change the descendant URIs
+     *
+     * @param  int $id
+     * @param  string $uri
+     * @return mixed
+     */
+    protected function changeDescendantUris($id, $uri)
+    {
+        $children = Table\Categories::findBy(['parent_id' => $id]);
+
+        while ($children->count() > 0) {
+            foreach ($children->rows() as $child) {
+                $c = Table\Categories::findById($child->id);
+                if (isset($c->id)) {
+                    $c->uri = $uri . '/' . $c->slug;
+                    $c->save();
+                }
+                $children = $this->changeDescendantUris($c->id, $c->uri);
+            }
+        }
+
+        return $children;
+    }
+
+
+    /**
+     * Get content
+     *
+     * @param  Table\Categories $category
+     * @param  boolean          $fields
+     * @return void
+     */
+    protected function getCategory(Table\Categories $category, $fields = false)
+    {
+        if ($fields) {
+            $c    = \Fields\Model\FieldValue::getModelObject('Content\Model\Content', [$category->id]);
+            $data = $c->toArray();
+        } else {
+            $data = $category->getColumns();
+        }
+
+        $categories = [
+            new \ArrayObject([
+                'id'    => $category->id,
+                'title' => $category->title,
+                'uri'   => $category->uri,
+                'depth' => 0
+            ], \ArrayObject::ARRAY_AS_PROPS)
+        ];
+
+        $this->getAll(null, $category->id);
+
+        foreach ($this->flatMap as $c) {
+            $c->depth++;
+            $categories[] = $c;
+        }
+
+        //print_r($categories);
+
+        $data['breadcrumb']        = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
+        $data['breadcrumb_text']   = strip_tags($data['breadcrumb'], 'span');
+
+        $this->data = array_merge($this->data, $data);
+    }
 }
