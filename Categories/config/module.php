@@ -72,7 +72,6 @@ return [
         ],
         'separator'      => ' &gt; ',
         'summary_length' => 150,
-        'show_total'     => true,
-        'recursive'      => true
+        'show_total'     => true
     ]
 ];

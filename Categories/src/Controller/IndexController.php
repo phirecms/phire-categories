@@ -26,7 +26,6 @@ class IndexController extends AbstractController
             $category->settings       = $this->application->module('Categories')['settings'];
             $category->summary_length = $this->application->module('Categories')['summary_length'];
             $category->show_total     = $this->application->module('Categories')['show_total'];
-            $category->recursive      = $this->application->module('Categories')['recursive'];
             $category->getByUri($uri, $this->application->modules()->isRegistered('Fields'));
 
             if (isset($category->id)) {

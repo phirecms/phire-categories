@@ -77,14 +77,16 @@ class Category extends AbstractModel
      */
     public function save(array $fields)
     {
+        $parentId = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
+            (int)$fields['category_parent_id'] : null);
+
         $category = new Table\Categories([
-            'parent_id' => ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
-                (int)$fields['category_parent_id'] : null),
+            'parent_id' => $parentId,
             'title'     => $fields['title'],
             'uri'       => $fields['uri'],
             'slug'      => $fields['slug'],
             'order'     => (int)$fields['order'],
-            'hierarchy' => null
+            'hierarchy' => $this->getHierarchy($parentId)
         ]);
         $category->save();
 
@@ -101,13 +103,16 @@ class Category extends AbstractModel
     {
         $category = Table\Categories::findById((int)$fields['id']);
         if (isset($category->id)) {
-            $category->parent_id = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
+
+            $parentId = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null);
+
+            $category->parent_id = $parentId;
             $category->title     = $fields['title'];
             $category->uri       = $fields['uri'];
             $category->slug      = $fields['slug'];
             $category->order     = (int)$fields['order'];
-            $category->hierarchy = null;
+            $category->hierarchy = $this->getHierarchy($parentId);
             $category->save();
 
             $this->changeDescendantUris($category->id, $category->uri);
@@ -167,23 +172,18 @@ class Category extends AbstractModel
     /**
      * Get total number of items in category
      *
-     * @param  int     $id
+     * @param  int $id
      * @return int
      */
     public function getTotal($id)
     {
         $count = Table\ContentToCategories::findBy(['category_id' => $id])->count();
-        /*
-        $count = (Table\ContentToCategories::findBy(['category_id' => $id])->count() > 0) ? 1 : 0;
+        $child = Table\Categories::findBy(['parent_id' => $id]);
 
-        if ($this->recursive) {
-            $child = Table\Categories::findBy(['parent_id' => $id]);
-            while (isset($child->id)) {
-                $count += (Table\ContentToCategories::findBy(['category_id' => $child->id])->count() > 0) ? 1 : 0;
-                $child = Table\Categories::findBy(['parent_id' => $child->id]);
-            }
+        while (isset($child->id)) {
+            $count += Table\ContentToCategories::findBy(['category_id' => $child->id])->count();
+            $child = Table\Categories::findBy(['parent_id' => $child->id]);
         }
-        */
 
         return $count;
     }
@@ -274,6 +274,26 @@ class Category extends AbstractModel
         return $children;
     }
 
+    /**
+     * Get parental hierarchy
+     *
+     * @param  int $parentId
+     * @return string
+     */
+    protected function getHierarchy($parentId = null)
+    {
+        $parents = [];
+
+        while (null !== $parentId) {
+            array_unshift($parents, $parentId);
+            $category = Table\Categories::findById($parentId);
+            if (isset($category->id)) {
+                $parentId = $category->parent_id;
+            }
+        }
+
+        return (count($parents) > 0) ? implode('|', $parents) : '';
+    }
 
     /**
      * Get content
@@ -307,9 +327,8 @@ class Category extends AbstractModel
             $categories[] = $c;
         }
 
-        //print_r($categories);
-
         $items = [];
+
         foreach ($categories as $cat) {
             $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], null, ['order' => 'order ASC']);
             if ($c2c->hasRows()) {
