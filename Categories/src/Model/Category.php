@@ -80,10 +80,11 @@ class Category extends AbstractModel
         $category = new Table\Categories([
             'parent_id' => ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null),
-            'title' => $fields['title'],
-            'uri'   => $fields['uri'],
-            'slug'  => $fields['slug'],
-            'order' => (int)$fields['order']
+            'title'     => $fields['title'],
+            'uri'       => $fields['uri'],
+            'slug'      => $fields['slug'],
+            'order'     => (int)$fields['order'],
+            'hierarchy' => null
         ]);
         $category->save();
 
@@ -102,10 +103,11 @@ class Category extends AbstractModel
         if (isset($category->id)) {
             $category->parent_id = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null);
-            $category->title = $fields['title'];
-            $category->uri   = $fields['uri'];
-            $category->slug  = $fields['slug'];
-            $category->order = (int)$fields['order'];
+            $category->title     = $fields['title'];
+            $category->uri       = $fields['uri'];
+            $category->slug      = $fields['slug'];
+            $category->order     = (int)$fields['order'];
+            $category->hierarchy = null;
             $category->save();
 
             $this->changeDescendantUris($category->id, $category->uri);

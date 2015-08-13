@@ -20,10 +20,11 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS "[{prefix}]categories" (
   "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
   "parent_id" integer,
-  "title" varchar(255) NOT NULL,
-  "uri" varchar(255) NOT NULL,
-  "slug" varchar(255),
+  "title" varchar NOT NULL,
+  "uri" varchar NOT NULL,
+  "slug" varchar,
   "order" integer,
+  "hierarchy" varchar,
   UNIQUE ("id"),
   CONSTRAINT "fk_category_parent_id" FOREIGN KEY ("parent_id") REFERENCES "[{prefix}]categories" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
