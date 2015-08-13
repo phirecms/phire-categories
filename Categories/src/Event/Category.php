@@ -26,28 +26,30 @@ class Category
 
         $categoryValues = [];
 
-        foreach ($cat->getFlatMap() as $c) {
-            $categoryValues[$c->id] = '<input class="category-order-value" type="text" value="0" size="2" name="category_order_' .
-                $c->id . '" id="category_order_' . $c->id . '"/>' .
-                str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
-                '<span class="category-checkbox-value">' . $c->title . '</span>';
-        }
-
-        foreach ($settings as $name => $setting) {
-            if (isset($forms[$setting['form']['name']])) {
-                $forms[$setting['form']['name']][$setting['form']['group']]['categories'] = [
-                    'type'  => 'checkbox',
-                    'label' => 'Categories',
-                    'value' => $categoryValues
-                ];
-                $forms[$setting['form']['name']][$setting['form']['group']]['category_type'] = [
-                    'type'  => 'hidden',
-                    'value' => $name
-                ];
+        if (count($cat->getFlatMap()) > 0) {
+            foreach ($cat->getFlatMap() as $c) {
+                $categoryValues[$c->id] = '<input class="category-order-value" type="text" value="0" size="2" name="category_order_' .
+                    $c->id . '" id="category_order_' . $c->id . '"/>' .
+                    str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
+                    '<span class="category-checkbox-value">' . $c->title . '</span>';
             }
-        }
 
-        $application->mergeConfig(['forms' => $forms], true);
+            foreach ($settings as $name => $setting) {
+                if (isset($forms[$setting['form']['name']])) {
+                    $forms[$setting['form']['name']][$setting['form']['group']]['categories'] = [
+                        'type' => 'checkbox',
+                        'label' => 'Categories',
+                        'value' => $categoryValues
+                    ];
+                    $forms[$setting['form']['name']][$setting['form']['group']]['category_type'] = [
+                        'type' => 'hidden',
+                        'value' => $name
+                    ];
+                }
+            }
+
+            $application->mergeConfig(['forms' => $forms], true);
+        }
     }
 
     /**

@@ -171,14 +171,17 @@ class Category extends AbstractModel
     public function getTotal($id)
     {
         $count = Table\ContentToCategories::findBy(['category_id' => $id])->count();
-        $child = Table\Categories::findBy(['parent_id' => $id]);
+        /*
+        $count = (Table\ContentToCategories::findBy(['category_id' => $id])->count() > 0) ? 1 : 0;
 
         if ($this->recursive) {
+            $child = Table\Categories::findBy(['parent_id' => $id]);
             while (isset($child->id)) {
-                $count += Table\ContentToCategories::findBy(['category_id' => $child->id])->count();
+                $count += (Table\ContentToCategories::findBy(['category_id' => $child->id])->count() > 0) ? 1 : 0;
                 $child = Table\Categories::findBy(['parent_id' => $child->id]);
             }
         }
+        */
 
         return $count;
     }

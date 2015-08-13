@@ -53,9 +53,12 @@ return [
                     'name'  => 'Content\Form\Content',
                     'group' => 0
                 ],
-                'model'  => 'Content\Model\Content',
-                'method' => 'getById',
-                'remove' => 'process_content'
+                'model'    => 'Content\Model\Content',
+                'method'   => 'getById',
+                'required' => [
+                    'status' => 1
+                ],
+                'remove'   => 'process_content'
             ],
             'media' => [
                 'form' => [
