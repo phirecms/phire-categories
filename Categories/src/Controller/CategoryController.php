@@ -137,16 +137,26 @@ class CategoryController extends AbstractController
     /**
      * JSON action method
      *
-     * @param  int $id
+     * @param  int    $id
+     * @param  string $type
      * @return void
      */
-    public function json($id)
+    public function json($id, $type = null)
     {
-        $json = ['parent_uri' => ''];
-
-        $content = Table\Categories::findById($id);
-        if (isset($content->id)) {
-            $json['parent_uri'] = $content->uri;
+        $json = [];
+        if (null !== $type) {
+            $c2c = Table\ContentToCategories::findBy(['content_id' => $id, 'type' => $type]);
+            foreach ($c2c->rows() as $c) {
+                if ($c->order > 0) {
+                    $json['category_order_' . $c->category_id] = $c->order;
+                }
+            }
+        } else {
+            $json['parent_uri'] = '';
+            $content = Table\Categories::findById($id);
+            if (isset($content->id)) {
+                $json['parent_uri'] = $content->uri;
+            }
         }
 
         $this->response->setBody(json_encode($json, JSON_PRETTY_PRINT));

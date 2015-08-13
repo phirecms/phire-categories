@@ -144,15 +144,16 @@ class Category extends AbstractModel
         $breadcrumb = null;
         $category   = Table\Categories::findById($id);
         if (isset($category->id)) {
-            $breadcrumb = $category->title . ((isset($this->show_total) && ($this->show_total)) ? ' (' . $this->getTotal($category->id) . ')' : null);
             $pId        = $category->parent_id;
+            $breadcrumb = $category->title . ((isset($this->show_total) && ($this->show_total)) ?
+                ' (' . $this->getTotal($category->id) . ')' : null);
 
             while (null !== $pId) {
                 $category = Table\Categories::findById($pId);
                 if (isset($category->id)) {
                     $breadcrumb = '<a href="' . BASE_PATH . '/category' . $category->uri . '">' . $category->title .
                         ((isset($this->show_total) && ($this->show_total)) ? ' (' . $this->getTotal($category->id) . ')' : null) . '</a>' .
-                        '<span>' . $sep . '</span>' . $breadcrumb;
+                        ' <span>' . $sep . '</span> ' . $breadcrumb;
                     $pId = $category->parent_id;
                 }
             }
@@ -165,15 +166,14 @@ class Category extends AbstractModel
      * Get total number of items in category
      *
      * @param  int     $id
-     * @param  boolean $rec
      * @return int
      */
-    public function getTotal($id, $rec = true)
+    public function getTotal($id)
     {
         $count = Table\ContentToCategories::findBy(['category_id' => $id])->count();
         $child = Table\Categories::findBy(['parent_id' => $id]);
 
-        if ($rec) {
+        if ($this->recursive) {
             while (isset($child->id)) {
                 $count += Table\ContentToCategories::findBy(['category_id' => $child->id])->count();
                 $child = Table\Categories::findBy(['parent_id' => $child->id]);
@@ -304,8 +304,35 @@ class Category extends AbstractModel
 
         //print_r($categories);
 
-        $data['breadcrumb']        = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
-        $data['breadcrumb_text']   = strip_tags($data['breadcrumb'], 'span');
+        $items = [];
+        foreach ($categories as $cat) {
+            $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], null, ['order' => 'order ASC']);
+            if ($c2c->hasRows()) {
+                foreach ($c2c->rows() as $c) {
+                    if ($fields) {
+                        $filters = ['strip_tags' => null];
+                        if ($this->summary_length > 0) {
+                            $filters['substr'] = [0, $this->summary_length];
+                        };
+                        $item = \Fields\Model\FieldValue::getModelObject(
+                            $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method']
+                        );
+                    } else {
+                        $class = $this->settings[$c->type]['model'];
+                        $model = new $class();
+                        call_user_func_array([
+                            $model, $this->settings[$c->type]['method']], [$c->content_id]
+                        );
+                        $item = $model;
+                    }
+                    $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+                }
+            }
+        }
+
+        $data['items']           = $items;
+        $data['breadcrumb']      = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
+        $data['breadcrumb_text'] = strip_tags($data['breadcrumb'], 'span');
 
         $this->data = array_merge($this->data, $data);
     }

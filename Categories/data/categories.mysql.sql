@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `[{prefix}]content_to_categories` (
   `content_id` int(16) NOT NULL,
   `category_id` int(16) NOT NULL,
   `type` varchar(255) NOT NULL,
+  `order` int(16),
   INDEX `category_content_id` (`content_id`),
   INDEX `content_category_id` (`category_id`),
   UNIQUE (`content_id`, `category_id`),

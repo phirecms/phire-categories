@@ -56,11 +56,26 @@
     background-repeat: no-repeat;
 }
 
+input.category-order-value {
+    margin: 1px 0 0 2px;
+    padding: 2px;
+    font-size: 0.75em;
+    display: inline-block;
+    float: right;
+    width: 18px;
+    height: 15px;
+    text-align: center;
+    background-color: #dedede;
+    border-radius: 0;
+    border: none;
+}
+
 .category-checkbox-value {
     margin: 0;
     padding: 2px;
-    font-size: 0.9em;
+    font-size: 0.825em;
     display: inline-block;
     float: right;
-    width: 80px;
+    width: 125px;
+    border-bottom: dotted 1px #ccc;
 }

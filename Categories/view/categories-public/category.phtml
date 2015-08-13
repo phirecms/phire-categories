@@ -13,6 +13,14 @@
 <body>
     <h1><?=$title; ?></h1>
     <p><?=$breadcrumb; ?></p>
+<?php if (isset($items) && (count($items) > 0)): ?>
+<?php foreach ($items as $item): ?>
+    <div class="item-div">
+        <h3><?=$item->title; ?></h3>
+        <p><a href="<?=$item->uri; ?>"><?=$item->uri; ?></a></p>
+    </div>
+<?php endforeach; ?>
+<?php endif; ?>
 </body>
 
 </html>

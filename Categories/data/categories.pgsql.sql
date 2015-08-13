@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "[{prefix}]content_to_categories" (
   "content_id" integer NOT NULL,
   "category_id" integer NOT NULL,
   "type" varchar(255) NOT NULL,
+  "order" integer,
   UNIQUE ("content_id", "category_id"),
   CONSTRAINT "fk_content_category_id" FOREIGN KEY ("category_id") REFERENCES "[{prefix}]categories" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;

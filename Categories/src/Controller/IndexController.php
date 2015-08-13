@@ -19,8 +19,14 @@ class IndexController extends AbstractController
         $uri = substr($this->request->getRequestUri(), 9);
 
         if ($uri != '/') {
+            if (substr($uri, -1) == '/') {
+                $uri = substr($uri, 0, -1);
+            }
             $category = new Model\Category();
-            $category->show_total = $this->application->module('Categories')['show_total'];
+            $category->settings       = $this->application->module('Categories')['settings'];
+            $category->summary_length = $this->application->module('Categories')['summary_length'];
+            $category->show_total     = $this->application->module('Categories')['show_total'];
+            $category->recursive      = $this->application->module('Categories')['recursive'];
             $category->getByUri($uri, $this->application->modules()->isRegistered('Fields'));
 
             if (isset($category->id)) {

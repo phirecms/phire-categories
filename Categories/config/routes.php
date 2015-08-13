@@ -30,7 +30,7 @@ return [
                 'permission' => 'edit'
             ]
         ],
-        '/categories/json/:id' => [
+        '/categories/json/:id[/:type]' => [
             'controller' => 'Categories\Controller\CategoryController',
             'action'     => 'json',
             'acl'        => [

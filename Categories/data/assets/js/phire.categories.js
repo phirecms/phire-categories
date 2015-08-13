@@ -48,4 +48,17 @@ jax(document).ready(function(){
             jax('#uri-span').val(jax('#uri').val());
         }
     }
+    if ((jax('#category_type')[0] != undefined) && (jax('#id')[0] != undefined) && (jax.cookie.load('phire') != '')) {
+        var type = jax('#category_type').val();
+        var id   = jax('#id').val();
+
+        var phireCookie = jax.cookie.load('phire');
+
+        var path = phireCookie.base_path + phireCookie.app_uri;
+        var json = jax.get(path + '/categories/json/' + id + '/' + type);
+
+        for (var field in json) {
+            jax('#' + field).val(json[field]);
+        }
+    }
 });

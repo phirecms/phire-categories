@@ -18,8 +18,8 @@ class Category
      */
     public static function bootstrap(Application $application)
     {
-        $forms      = $application->config()['forms'];
-        $categories = $application->module('Categories')['categories'];
+        $forms    = $application->config()['forms'];
+        $settings = $application->module('Categories')['settings'];
 
         $cat = new Model\Category();
         $cat->getAll();
@@ -27,20 +27,22 @@ class Category
         $categoryValues = [];
 
         foreach ($cat->getFlatMap() as $c) {
-            $categoryValues[$c->id] = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
+            $categoryValues[$c->id] = '<input class="category-order-value" type="text" value="0" size="2" name="category_order_' .
+                $c->id . '" id="category_order_' . $c->id . '"/>' .
+                str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
                 '<span class="category-checkbox-value">' . $c->title . '</span>';
         }
 
-        foreach ($categories as $object => $category) {
-            if (isset($forms[$category['form']['name']])) {
-                $forms[$category['form']['name']][$category['form']['group']]['categories'] = [
+        foreach ($settings as $name => $setting) {
+            if (isset($forms[$setting['form']['name']])) {
+                $forms[$setting['form']['name']][$setting['form']['group']]['categories'] = [
                     'type'  => 'checkbox',
                     'label' => 'Categories',
                     'value' => $categoryValues
                 ];
-                $forms[$category['form']['name']][$category['form']['group']]['category_type'] = [
+                $forms[$setting['form']['name']][$setting['form']['group']]['category_type'] = [
                     'type'  => 'hidden',
-                    'value' => $object
+                    'value' => $name
                 ];
             }
         }
@@ -104,7 +106,8 @@ class Category
                     $c2c = new Table\ContentToCategories([
                         'content_id'  => $contentId,
                         'category_id' => $category,
-                        'type'        => $type
+                        'type'        => $type,
+                        'order'       => (int)$_POST['category_order_' . $category]
                     ]);
                     $c2c->save();
                 }
@@ -122,12 +125,12 @@ class Category
     public static function delete(AbstractController $controller, Application $application)
     {
         if ($_POST) {
-            $categories = $application->module('Categories')['categories'];
-            foreach ($categories as $object => $category) {
-                if (($category['remove'] != 'process_content') ||
-                    (($category['remove'] == 'process_content') && isset($_POST['content_process_action']) && ($_POST['content_process_action'] == -3))) {
-                    if (isset($_POST[$category['remove']])) {
-                        foreach ($_POST[$category['remove']] as $id) {
+            $settings = $application->module('Categories')['settings'];
+            foreach ($settings as $name => $setting) {
+                if (($setting['remove'] != 'process_content') ||
+                    (($setting['remove'] == 'process_content') && isset($_POST['content_process_action']) && ($_POST['content_process_action'] == -3))) {
+                    if (isset($_POST[$setting['remove']])) {
+                        foreach ($_POST[$setting['remove']] as $id) {
                             $c2c = new Table\ContentToCategories();
                             $c2c->delete(['content_id' => (int)$id]);
                         }

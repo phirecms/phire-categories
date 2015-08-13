@@ -47,12 +47,14 @@ return [
                 'action' => 'Categories\Event\Category::delete'
             ]
         ],
-        'categories' => [
+        'settings' => [
             'content' => [
                 'form' => [
                     'name'  => 'Content\Form\Content',
                     'group' => 0
                 ],
+                'model'  => 'Content\Model\Content',
+                'method' => 'getById',
                 'remove' => 'process_content'
             ],
             'media' => [
@@ -60,11 +62,14 @@ return [
                     'name'  => 'Media\Form\Media',
                     'group' => 0
                 ],
+                'model'  => 'Media\Model\Media',
+                'method' => 'getById',
                 'remove' => 'rm_media'
             ]
         ],
         'separator'      => ' &gt; ',
         'summary_length' => 150,
-        'show_total'     => true
+        'show_total'     => true,
+        'recursive'      => true
     ]
 ];
