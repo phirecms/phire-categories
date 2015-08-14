@@ -12,7 +12,8 @@
 
 <body>
     <h1><?=$title; ?></h1>
-    <p><?=$breadcrumb; ?></p>
+    <p><?=$category_breadcrumb; ?></p>
+<?=$pages;?>
 <?php if (isset($items) && (count($items) > 0)): ?>
 <?php foreach ($items as $item): ?>
     <div class="item-div">
@@ -21,6 +22,7 @@
     </div>
 <?php endforeach; ?>
 <?php endif; ?>
+<?=$category_nav; ?>
 </body>
 
 </html>

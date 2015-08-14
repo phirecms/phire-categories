@@ -36,6 +36,10 @@ return [
             ],
             [
                 'name'   => 'app.send',
+                'action' => 'Categories\Event\Category::getNav'
+            ],
+            [
+                'name'   => 'app.send',
                 'action' => 'Categories\Event\Category::getAll'
             ],
             [
@@ -70,8 +74,20 @@ return [
                 'remove' => 'rm_media'
             ]
         ],
-        'separator'      => ' &gt; ',
-        'summary_length' => 150,
-        'show_total'     => true
+        'separator'       => ' &gt; ',
+        'summary_length'  => 150,
+        'show_total'      => true,
+        'nav_config'      => [
+            'top'    => [
+                'node' => 'ul',
+                'id'   => 'category-nav'
+            ],
+            'parent' => [
+                'node' => 'ul'
+            ],
+            'child' => [
+                'node' => 'li'
+            ]
+        ]
     ]
 ];

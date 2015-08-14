@@ -5,6 +5,7 @@ namespace Categories\Controller;
 use Categories\Model;
 use Categories\Table;
 use Phire\Controller\AbstractController;
+use Pop\Paginator\Paginator;
 
 class IndexController extends AbstractController
 {
@@ -26,11 +27,25 @@ class IndexController extends AbstractController
             $category->settings       = $this->application->module('Categories')['settings'];
             $category->summary_length = $this->application->module('Categories')['summary_length'];
             $category->show_total     = $this->application->module('Categories')['show_total'];
+            $category->nav_config     = $this->application->module('Categories')['nav_config'];
             $category->getByUri($uri, $this->application->modules()->isRegistered('Fields'));
 
             if (isset($category->id)) {
+                if (count($category->items) > $this->config->pagination) {
+                    $page  = $this->request->getQuery('page');
+                    $limit = $this->config->pagination;
+                    $pages = new Paginator(count($category->items), $limit);
+                    $pages->useInput(true);
+                    $offset = ((null !== $page) && ((int)$page > 1)) ?
+                        ($page * $limit) - $limit : 0;
+                    $category->items = array_slice($category->items, $offset, $limit, true);
+                } else {
+                    $pages = null;
+                }
+
                 $this->prepareView('categories-public/category.phtml');
                 $this->view->title = 'Category : ' . $category->title;
+                $this->view->pages = $pages;
                 $this->view->merge($category->toArray());
                 $this->send();
             } else {

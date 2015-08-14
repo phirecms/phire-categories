@@ -4,6 +4,7 @@ namespace Categories\Model;
 
 use Categories\Table;
 use Phire\Model\AbstractModel;
+use Pop\Nav\Nav;
 
 class Category extends AbstractModel
 {
@@ -140,7 +141,7 @@ class Category extends AbstractModel
     }
 
     /**
-     * Method to get content breadcrumb
+     * Method to get category breadcrumb
      *
      * @param  int     $id
      * @param  string  $sep
@@ -158,8 +159,7 @@ class Category extends AbstractModel
             while (null !== $pId) {
                 $category = Table\Categories::findById($pId);
                 if (isset($category->id)) {
-                    $breadcrumb = '<a href="' . BASE_PATH . '/category' . $category->uri . '">' . $category->title .
-                        ((isset($this->show_total) && ($this->show_total)) ? ' (' . $this->getTotal($category->id) . ')' : null) . '</a>' .
+                    $breadcrumb = '<a href="' . BASE_PATH . '/category' . $category->uri . '">' . $category->title . '</a>' .
                         ' <span>' . $sep . '</span> ' . $breadcrumb;
                     $pId = $category->parent_id;
                 }
@@ -173,19 +173,42 @@ class Category extends AbstractModel
      * Get total number of items in category
      *
      * @param  int $id
+     * @param  int $depth
      * @return int
      */
-    public function getTotal($id)
+    public function getTotal($id, $depth = 0)
     {
-        $count = Table\ContentToCategories::findBy(['category_id' => $id])->count();
-        $child = Table\Categories::findBy(['parent_id' => $id]);
+        $count    = Table\ContentToCategories::findBy(['category_id' => $id])->count();
+        $children = Table\Categories::findBy(['parent_id' => $id]);
 
-        while (isset($child->id)) {
-            $count += Table\ContentToCategories::findBy(['category_id' => $child->id])->count();
-            $child = Table\Categories::findBy(['parent_id' => $child->id]);
+        foreach ($children->rows() as $child) {
+            $count += $this->getTotal($child->id, ($depth + 1));
         }
 
         return $count;
+    }
+
+    /**
+     * Method to get category navigation
+     *
+     * @param  array $config
+     * @return Nav
+     */
+    public function getNav($config)
+    {
+        $categoriesAry = $this->getAll();
+        $tree          = [];
+
+        foreach ($categoriesAry as $category) {
+            $tree[] = [
+                'name'     => $category->title,
+                'href'     => '/category' . $category->uri,
+                'children' => $this->getNavChildren($category)
+            ];
+        }
+
+        $nav = new Nav($tree, $config);
+        return $nav;
     }
 
     /**
@@ -250,6 +273,33 @@ class Category extends AbstractModel
     }
 
     /**
+     * Get category navigation children
+     *
+     * @param  \ArrayObject|array $category
+     * @param  int                $depth
+     * @return array
+     */
+    protected function getNavChildren($category, $depth = 0)
+    {
+        $children = [];
+        $child    = Table\Categories::findBy(['parent_id' => $category->id], null, ['order' => 'order ASC']);
+
+        if ($child->hasRows()) {
+            foreach ($child->rows() as $c) {
+                $children[]  = [
+                    'name'     => $c->title . ((isset($this->show_total) && ($this->show_total) &&
+                        (!Table\Categories::findBy(['parent_id' => $c->id])->hasRows())) ?
+                        ' (' . $this->getTotal($c->id) . ')' : null),
+                    'href'     => '/category' . $c->uri,
+                    'children' => $this->getNavChildren($c, ($depth + 1))
+                ];
+            }
+        }
+
+        return $children;
+    }
+
+    /**
      * Change the descendant URIs
      *
      * @param  int $id
@@ -305,7 +355,7 @@ class Category extends AbstractModel
     protected function getCategory(Table\Categories $category, $fields = false)
     {
         if ($fields) {
-            $c    = \Fields\Model\FieldValue::getModelObject('Content\Model\Content', [$category->id]);
+            $c    = \Fields\Model\FieldValue::getModelObject('Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
         } else {
             $data = $category->getColumns();
@@ -339,7 +389,7 @@ class Category extends AbstractModel
                             $filters['substr'] = [0, $this->summary_length];
                         };
                         $item = \Fields\Model\FieldValue::getModelObject(
-                            $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method']
+                            $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                         );
                     } else {
                         $class = $this->settings[$c->type]['model'];
@@ -354,9 +404,10 @@ class Category extends AbstractModel
             }
         }
 
-        $data['items']           = $items;
-        $data['breadcrumb']      = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
-        $data['breadcrumb_text'] = strip_tags($data['breadcrumb'], 'span');
+        $data['items'] = $items;
+        $data['category_nav']             = $this->getNav($this->nav_config);
+        $data['category_breadcrumb']      = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
+        $data['category_breadcrumb_text'] = strip_tags($data['category_breadcrumb'], 'span');
 
         $this->data = array_merge($this->data, $data);
     }

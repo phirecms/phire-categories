@@ -59,6 +59,22 @@ class Category
      * @param  Application        $application
      * @return void
      */
+    public static function getNav(AbstractController $controller, Application $application)
+    {
+        if ((!$_POST) && ($controller->hasView())) {
+            $category = new Model\Category();
+            $category->show_total = $application->module('Categories')['show_total'];
+            $controller->view()->category_nav = $category->getNav($application->module('Categories')['nav_config']);
+        }
+    }
+
+    /**
+     * Get all category values for the form object
+     *
+     * @param  AbstractController $controller
+     * @param  Application        $application
+     * @return void
+     */
     public static function getAll(AbstractController $controller, Application $application)
     {
         if ((!$_POST) && ($controller->hasView()) && (null !== $controller->view()->form) &&
