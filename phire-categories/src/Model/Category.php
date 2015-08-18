@@ -1,8 +1,8 @@
 <?php
 
-namespace Categories\Model;
+namespace Phire\Categories\Model;
 
-use Categories\Table;
+use Phire\Categories\Table;
 use Phire\Model\AbstractModel;
 use Pop\Nav\Nav;
 
@@ -355,7 +355,7 @@ class Category extends AbstractModel
     protected function getCategory(Table\Categories $category, $fields = false)
     {
         if ($fields) {
-            $c    = \Fields\Model\FieldValue::getModelObject('Categories\Model\Category', [$category->id]);
+            $c    = \Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
         } else {
             $data = $category->getColumns();

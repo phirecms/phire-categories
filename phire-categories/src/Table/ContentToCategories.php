@@ -1,6 +1,6 @@
 <?php
 
-namespace Categories\Table;
+namespace Phire\Categories\Table;
 
 use Pop\Db\Record;
 

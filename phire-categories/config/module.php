@@ -1,13 +1,13 @@
 <?php
 /**
- * Module Name: Categories
+ * Module Name: phire-categories
  * Author: Nick Sagona
  * Description: This is the categories module for Phire CMS 2, to be used in conjunction with the Content and Media modules
  * Version: 1.0
  */
 return [
-    'Categories' => [
-        'prefix'     => 'Categories\\',
+    'phire-categories' => [
+        'prefix'     => 'Phire\Categories\\',
         'src'        => __DIR__ . '/../src',
         'routes'     => include 'routes.php',
         'resources'  => include 'resources.php',
@@ -26,38 +26,38 @@ return [
             ]
         ],
         'models' => [
-            'Categories\Model\Category' => []
+            'Phire\Categories\Model\Category' => []
         ],
         'events' => [
             [
                 'name'     => 'app.route.pre',
-                'action'   => 'Categories\Event\Category::bootstrap',
+                'action'   => 'Phire\Categories\Event\Category::bootstrap',
                 'priority' => 1000
             ],
             [
                 'name'   => 'app.send',
-                'action' => 'Categories\Event\Category::getNav'
+                'action' => 'Phire\Categories\Event\Category::getNav'
             ],
             [
                 'name'   => 'app.send',
-                'action' => 'Categories\Event\Category::getAll'
+                'action' => 'Phire\Categories\Event\Category::getAll'
             ],
             [
                 'name'   => 'app.send',
-                'action' => 'Categories\Event\Category::save'
+                'action' => 'Phire\Categories\Event\Category::save'
             ],
             [
                 'name'   => 'app.send',
-                'action' => 'Categories\Event\Category::delete'
+                'action' => 'Phire\Categories\Event\Category::delete'
             ]
         ],
         'settings' => [
             'content' => [
                 'form' => [
-                    'name'  => 'Content\Form\Content',
+                    'name'  => 'Phire\Content\Form\Content',
                     'group' => 0
                 ],
-                'model'    => 'Content\Model\Content',
+                'model'    => 'Phire\Content\Model\Content',
                 'method'   => 'getById',
                 'required' => [
                     'status' => 1
@@ -66,10 +66,10 @@ return [
             ],
             'media' => [
                 'form' => [
-                    'name'  => 'Media\Form\Media',
+                    'name'  => 'Phire\Media\Form\Media',
                     'group' => 0
                 ],
-                'model'  => 'Media\Model\Media',
+                'model'  => 'Phire\Media\Model\Media',
                 'method' => 'getById',
                 'remove' => 'rm_media'
             ]

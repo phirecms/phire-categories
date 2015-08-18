@@ -1,9 +1,9 @@
 <?php
 
-namespace Categories\Event;
+namespace Phire\Categories\Event;
 
-use Categories\Model;
-use Categories\Table;
+use Phire\Categories\Model;
+use Phire\Categories\Table;
 use Pop\Application;
 use Phire\Controller\AbstractController;
 
@@ -19,7 +19,7 @@ class Category
     public static function bootstrap(Application $application)
     {
         $forms    = $application->config()['forms'];
-        $settings = $application->module('Categories')['settings'];
+        $settings = $application->module('phire-categories')['settings'];
 
         $cat = new Model\Category();
         $cat->getAll();
@@ -63,8 +63,8 @@ class Category
     {
         if ((!$_POST) && ($controller->hasView())) {
             $category = new Model\Category();
-            $category->show_total = $application->module('Categories')['show_total'];
-            $controller->view()->category_nav = $category->getNav($application->module('Categories')['nav_config']);
+            $category->show_total = $application->module('phire-categories')['show_total'];
+            $controller->view()->category_nav = $category->getNav($application->module('phire-categories')['nav_config']);
         }
     }
 
@@ -143,7 +143,7 @@ class Category
     public static function delete(AbstractController $controller, Application $application)
     {
         if ($_POST) {
-            $settings = $application->module('Categories')['settings'];
+            $settings = $application->module('phire-categories')['settings'];
             foreach ($settings as $name => $setting) {
                 if (($setting['remove'] != 'process_content') ||
                     (($setting['remove'] == 'process_content') && isset($_POST['content_process_action']) && ($_POST['content_process_action'] == -3))) {

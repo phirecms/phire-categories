@@ -1,10 +1,10 @@
 <?php
 
-namespace Categories\Controller;
+namespace Phire\Categories\Controller;
 
-use Categories\Model;
-use Categories\Form;
-use Categories\Table;
+use Phire\Categories\Model;
+use Phire\Categories\Form;
+use Phire\Categories\Table;
 use Phire\Controller\AbstractController;
 
 class CategoryController extends AbstractController
@@ -40,7 +40,7 @@ class CategoryController extends AbstractController
         $category = new Model\Category();
         $category->getAll();
 
-        $fields = $this->application->config()['forms']['Categories\Form\Category'];
+        $fields = $this->application->config()['forms']['Phire\Categories\Form\Category'];
 
         $parents = [];
         foreach ($category->getFlatMap() as $c) {
@@ -48,8 +48,8 @@ class CategoryController extends AbstractController
                 (($c->depth > 0) ? '&rarr; ' : '') . $c->title;
         }
 
-        $fields[0]['category_parent_id']['value']   = $fields[0]['category_parent_id']['value'] + $parents;
-        $fields[1]['slug']['attributes']['onkeyup'] = "phire.changeCategoryUri();";
+        $fields[0]['category_parent_id']['value']    = $fields[0]['category_parent_id']['value'] + $parents;
+        $fields[1]['slug']['attributes']['onkeyup']  = "phire.changeCategoryUri();";
         $fields[1]['title']['attributes']['onkeyup'] = "phire.createSlug(this.value, '#slug'); phire.changeCategoryUri();";
 
         $this->view->form = new Form\Category($fields);
@@ -100,10 +100,10 @@ class CategoryController extends AbstractController
         }
 
         $this->prepareView('categories/edit.phtml');
-        $this->view->title         = 'Categories';
+        $this->view->title          = 'Categories';
         $this->view->category_title = $category->title;
 
-        $fields = $this->application->config()['forms']['Categories\Form\Category'];
+        $fields = $this->application->config()['forms']['Phire\Categories\Form\Category'];
 
         $fields[0]['category_parent_id']['value'] = $fields[0]['category_parent_id']['value'] + $parents;
         $fields[1]['slug']['label']     .=

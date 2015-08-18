@@ -2,12 +2,12 @@
 
 return [
     '/category/*' => [
-        'controller' => 'Categories\Controller\IndexController',
+        'controller' => 'Phire\Categories\Controller\IndexController',
         'action'     => 'index'
     ],
     APP_URI => [
         '/categories[/]' => [
-            'controller' => 'Categories\Controller\CategoryController',
+            'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'index',
             'acl'        => [
                 'resource'   => 'categories',
@@ -15,7 +15,7 @@ return [
             ]
         ],
         '/categories/add[/]' => [
-            'controller' => 'Categories\Controller\CategoryController',
+            'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'add',
             'acl'        => [
                 'resource'   => 'categories',
@@ -23,7 +23,7 @@ return [
             ]
         ],
         '/categories/edit/:id' => [
-            'controller' => 'Categories\Controller\CategoryController',
+            'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'edit',
             'acl'        => [
                 'resource'   => 'categories',
@@ -31,7 +31,7 @@ return [
             ]
         ],
         '/categories/json/:id[/:type]' => [
-            'controller' => 'Categories\Controller\CategoryController',
+            'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'json',
             'acl'        => [
                 'resource'   => 'categories',
@@ -39,7 +39,7 @@ return [
             ]
         ],
         '/categories/remove[/]' => [
-            'controller' => 'Categories\Controller\CategoryController',
+            'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'remove',
             'acl'        => [
                 'resource'   => 'categories',

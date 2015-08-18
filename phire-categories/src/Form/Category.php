@@ -1,10 +1,10 @@
 <?php
 
-namespace Categories\Form;
+namespace Phire\Categories\Form;
 
 use Pop\Form\Form;
 use Pop\Validator;
-use Categories\Table;
+use Phire\Categories\Table;
 
 class Category extends Form
 {

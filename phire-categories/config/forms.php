@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'Categories\Form\Category' => [
+    'Phire\Categories\Form\Category' => [
         [
             'submit' => [
                 'type'       => 'submit',

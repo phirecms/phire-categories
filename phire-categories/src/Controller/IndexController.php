@@ -1,9 +1,9 @@
 <?php
 
-namespace Categories\Controller;
+namespace Phire\Categories\Controller;
 
-use Categories\Model;
-use Categories\Table;
+use Phire\Categories\Model;
+use Phire\Categories\Table;
 use Phire\Controller\AbstractController;
 use Pop\Paginator\Paginator;
 
@@ -24,10 +24,10 @@ class IndexController extends AbstractController
                 $uri = substr($uri, 0, -1);
             }
             $category = new Model\Category();
-            $category->settings       = $this->application->module('Categories')['settings'];
-            $category->summary_length = $this->application->module('Categories')['summary_length'];
-            $category->show_total     = $this->application->module('Categories')['show_total'];
-            $category->nav_config     = $this->application->module('Categories')['nav_config'];
+            $category->settings       = $this->application->module('phire-categories')['settings'];
+            $category->summary_length = $this->application->module('phire-categories')['summary_length'];
+            $category->show_total     = $this->application->module('phire-categories')['show_total'];
+            $category->nav_config     = $this->application->module('phire-categories')['nav_config'];
             $category->getByUri($uri, $this->application->modules()->isRegistered('Fields'));
 
             if (isset($category->id)) {
