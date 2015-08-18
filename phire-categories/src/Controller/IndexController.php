@@ -28,7 +28,7 @@ class IndexController extends AbstractController
             $category->summary_length = $this->application->module('phire-categories')['summary_length'];
             $category->show_total     = $this->application->module('phire-categories')['show_total'];
             $category->nav_config     = $this->application->module('phire-categories')['nav_config'];
-            $category->getByUri($uri, $this->application->modules()->isRegistered('Fields'));
+            $category->getByUri($uri, $this->application->modules()->isRegistered('phire-fields'));
 
             if (isset($category->id)) {
                 if (count($category->items) > $this->config->pagination) {
