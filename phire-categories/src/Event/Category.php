@@ -64,7 +64,43 @@ class Category
         if ((!$_POST) && ($controller->hasView())) {
             $category = new Model\Category();
             $category->show_total = $application->module('phire-categories')['show_total'];
-            $controller->view()->category_nav = $category->getNav($application->module('phire-categories')['nav_config']);
+            $controller->view()->category_nav            = $category->getNav($application->module('phire-categories')['nav_config']);
+
+            if (($application->isRegistered('phire-templates')) &&
+                ($controller->view()->getTemplate() instanceof \Pop\View\Template\Stream) &&
+                (strpos($controller->view()->getTemplate()->getTemplate(), '[{category_') !== false)) {
+                $ids = self::parseCategoryIds($controller->view()->getTemplate()->getTemplate());
+
+                if (count($ids) > 0) {
+                    $category->settings       = $application->module('phire-categories')['settings'];
+                    $category->summary_length = $application->module('phire-categories')['summary_length'];
+                    foreach ($ids as $key => $value) {
+                        $items = $category->getContentById(
+                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                        );
+
+                        if (count($items) > $controller->config()->pagination) {
+                            $page  = $controller->request()->getQuery('page');
+                            $limit = $controller->config()->pagination;
+                            $pages = new \Pop\Paginator\Paginator(count($items), $limit);
+                            $pages->useInput(true);
+                            $offset = ((null !== $page) && ((int)$page > 1)) ?
+                                ($page * $limit) - $limit : 0;
+                            $items = array_slice($items, $offset, $limit, true);
+                        } else {
+                            $pages = null;
+                        }
+
+                        $controller->view()->pages  = $pages;
+                        $controller->view()->{$key} = $items;
+                    }
+                }
+            } else if (($application->isRegistered('phire-themes')) &&
+                ($controller->view()->getTemplate() instanceof \Pop\View\Template\File)) {
+                $category->settings       = $application->module('phire-categories')['settings'];
+                $category->summary_length = $application->module('phire-categories')['summary_length'];
+                $controller->view()->phire->category = $category;
+            }
         }
     }
 
@@ -156,6 +192,49 @@ class Category
                 }
             }
         }
+    }
+
+    /**
+     * Parse category IDs from template
+     *
+     * @param  string $template
+     * @return array
+     */
+    protected static function parseCategoryIds($template)
+    {
+        $ids  = [];
+        $cats = [];
+
+        preg_match_all('/\[\{category_.*\}\]/', $template, $cats);
+
+        if (isset($cats[0]) && isset($cats[0][0])) {
+            foreach ($cats[0] as $cat) {
+
+                $c = str_replace('}]', '', substr($cat, (strpos($cat, '_') + 1)));
+                if ($c != 'nav') {
+                    $key = str_replace(['[{', '}]'], ['', ''], $cat);
+                    if (strpos($c, '_') !== false) {
+                        $cAry  = explode('_', $c);
+                        $id    = $cAry[0];
+                        $order = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
+                        $limit = (isset($cAry[2])) ? $cAry[2] : null;
+                    } else {
+                        $id    = $c;
+                        $order = 'order ASC';
+                        $limit = null;
+                    }
+                    $ids[$key] = [
+                        'id'    => $id,
+                        'options' => [
+                            'order' => $order,
+                            'limit' => $limit
+                        ]
+                    ];
+                }
+            }
+        }
+
+        return $ids;
     }
 
 }

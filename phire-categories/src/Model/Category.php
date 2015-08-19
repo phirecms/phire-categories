@@ -57,9 +57,9 @@ class Category extends AbstractModel
     }
 
     /**
-     * Get category by URI
+     * Get category for template
      *
-     * @param  string $uri
+     * @param  string  $uri
      * @param  boolean $fields
      * @return void
      */
@@ -70,6 +70,53 @@ class Category extends AbstractModel
             $this->getCategory($category, $fields);
         }
     }
+
+    /**
+     * Get content by category ID
+     *
+     * @param  mixed   $id
+     * @param  array   $options
+     * @param  boolean $fields
+     * @return array
+     */
+    public function getContentById($id, array $options, $fields = false)
+    {
+        if (!is_numeric($id)) {
+            $category = Table\Categories::findBy(['title' => $id]);
+            if (isset($category->id)) {
+                $id = $category->id;
+            }
+        }
+
+        $items = [];
+        $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], null, $options);
+        if ($c2c->hasRows()) {
+            foreach ($c2c->rows() as $c) {
+                if ($fields) {
+                    $filters = ['strip_tags' => null];
+                    if ($this->summary_length > 0) {
+                        $filters['substr'] = [0, $this->summary_length];
+                    };
+                    $item = \Fields\Model\FieldValue::getModelObject(
+                        $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
+                    );
+                } else {
+                    $class = $this->settings[$c->type]['model'];
+                    $model = new $class();
+                    call_user_func_array([
+                        $model, $this->settings[$c->type]['method']], [$c->content_id]
+                    );
+                    $item = $model;
+                }
+                if ((isset($item->status) && ((int)$item->status == 1)) || !isset($item->status)) {
+                    $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+                }
+            }
+        }
+
+        return $items;
+    }
+
     /**
      * Save new category
      *
