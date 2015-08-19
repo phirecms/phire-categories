@@ -97,7 +97,7 @@ class Category extends AbstractModel
                     if ($this->summary_length > 0) {
                         $filters['substr'] = [0, $this->summary_length];
                     };
-                    $item = \Fields\Model\FieldValue::getModelObject(
+                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
                         $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                     );
                 } else {
@@ -402,7 +402,7 @@ class Category extends AbstractModel
     protected function getCategory(Table\Categories $category, $fields = false)
     {
         if ($fields) {
-            $c    = \Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
+            $c    = \Phire\Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
         } else {
             $data = $category->getColumns();
@@ -435,7 +435,7 @@ class Category extends AbstractModel
                         if ($this->summary_length > 0) {
                             $filters['substr'] = [0, $this->summary_length];
                         };
-                        $item = \Fields\Model\FieldValue::getModelObject(
+                        $item = \Phire\Fields\Model\FieldValue::getModelObject(
                             $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                         );
                     } else {
