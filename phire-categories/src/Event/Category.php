@@ -66,8 +66,7 @@ class Category
             $category->show_total = $application->module('phire-categories')['show_total'];
             $controller->view()->category_nav            = $category->getNav($application->module('phire-categories')['nav_config']);
 
-            if (($application->isRegistered('phire-templates')) &&
-                ($controller->view()->getTemplate() instanceof \Pop\View\Template\Stream) &&
+            if (($application->isRegistered('phire-templates')) && ($controller->view()->isStream()) &&
                 (strpos($controller->view()->getTemplate()->getTemplate(), '[{category_') !== false)) {
                 $ids = self::parseCategoryIds($controller->view()->getTemplate()->getTemplate());
 
@@ -95,8 +94,7 @@ class Category
                         $controller->view()->{$key} = $items;
                     }
                 }
-            } else if (($application->isRegistered('phire-themes')) &&
-                ($controller->view()->getTemplate() instanceof \Pop\View\Template\File)) {
+            } else if (($application->isRegistered('phire-themes')) && ($controller->view()->isFile())) {
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
                 $controller->view()->phire->category = $category;
