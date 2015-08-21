@@ -48,6 +48,18 @@ class Category
                 }
             }
 
+            if (isset($forms['Phire\Media\Form\Batch'])) {
+                $forms['Phire\Media\Form\Batch'][0]['categories'] = [
+                    'type' => 'checkbox',
+                    'label' => 'Categories',
+                    'value' => $categoryValues
+                ];
+                $forms['Phire\Media\Form\Batch'][0]['category_type'] = [
+                    'type' => 'hidden',
+                    'value' => 'media'
+                ];
+            }
+
             $application->mergeConfig(['forms' => $forms], true);
         }
     }
@@ -64,19 +76,26 @@ class Category
         if ((!$_POST) && ($controller->hasView())) {
             $category = new Model\Category();
             $category->show_total = $application->module('phire-categories')['show_total'];
-            $controller->view()->category_nav            = $category->getNav($application->module('phire-categories')['nav_config']);
+            $controller->view()->category_nav = $category->getNav($application->module('phire-categories')['nav_config']);
 
             if (($application->isRegistered('phire-templates')) && ($controller->view()->isStream()) &&
-                (strpos($controller->view()->getTemplate()->getTemplate(), '[{category_') !== false)) {
+                ((strpos($controller->view()->getTemplate()->getTemplate(), '[{category_') !== false) ||
+                (strpos($controller->view()->getTemplate()->getTemplate(), '[{categories_') !== false))) {
                 $ids = self::parseCategoryIds($controller->view()->getTemplate()->getTemplate());
 
                 if (count($ids) > 0) {
                     $category->settings       = $application->module('phire-categories')['settings'];
                     $category->summary_length = $application->module('phire-categories')['summary_length'];
                     foreach ($ids as $key => $value) {
-                        $items = $category->getContentById(
-                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
-                        );
+                        if (strpos($key, 'categories') !== false) {
+                            $items = $category->getChildContentById(
+                                $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                            );
+                        } else {
+                            $items = $category->getContentById(
+                                $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                            );
+                        }
 
                         if (count($items) > $controller->config()->pagination) {
                             $page  = $controller->request()->getQuery('page');
@@ -94,7 +113,8 @@ class Category
                         $controller->view()->{$key} = $items;
                     }
                 }
-            } else if (($application->isRegistered('phire-themes')) && ($controller->view()->isFile())) {
+            } else if ((($controller instanceof \Phire\Content\Controller\IndexController) ||
+                ($controller instanceof \Phire\Categories\Controller\IndexController)) && ($controller->view()->isFile())) {
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
                 $controller->view()->phire->category = $category;
@@ -141,6 +161,9 @@ class Category
      */
     public static function save(AbstractController $controller, Application $application)
     {
+        $type      = null;
+        $contentId = null;
+
         if (($_POST) && ($controller->hasView()) && (null !== $controller->view()->id) &&
             (null !== $controller->view()->form) && ($controller->view()->form instanceof \Pop\Form\Form)) {
             $categories = $controller->view()->form->categories;
@@ -149,19 +172,26 @@ class Category
 
             // Clear categories
             if ((null !== $type) && (null !== $contentId)) {
-                $c2c = new Table\ContentToCategories();
-                $c2c->delete(['content_id' => $contentId, 'type' => 'content']);
-            }
+                if (!is_array($contentId)) {
+                    $contentId = [$contentId];
+                }
+                foreach ($contentId as $id) {
+                    $c2c = new Table\ContentToCategories();
+                    $c2c->delete(['content_id' => $id, 'type' => $type]);
+                }
 
-            if (is_array($categories) && (count($categories) > 0)) {
-                foreach ($categories as $category) {
-                    $c2c = new Table\ContentToCategories([
-                        'content_id'  => $contentId,
-                        'category_id' => $category,
-                        'type'        => $type,
-                        'order'       => (int)$_POST['category_order_' . $category]
-                    ]);
-                    $c2c->save();
+                if (is_array($categories) && (count($categories) > 0)) {
+                    foreach ($categories as $category) {
+                        foreach ($contentId as $id) {
+                            $c2c = new Table\ContentToCategories([
+                                'content_id'  => $id,
+                                'category_id' => $category,
+                                'type'        => $type,
+                                'order'       => (int)$_POST['category_order_' . $category]
+                            ]);
+                            $c2c->save();
+                        }
+                    }
                 }
             }
         }
@@ -207,9 +237,8 @@ class Category
 
         if (isset($cats[0]) && isset($cats[0][0])) {
             foreach ($cats[0] as $cat) {
-
                 $c = str_replace('}]', '', substr($cat, (strpos($cat, '_') + 1)));
-                if ($c != 'nav') {
+                if (($c != 'nav') && ($c != 'uri') && ($c != 'title') && ($c != 'total') && (strpos($c, '[{') === false)) {
                     $key = str_replace(['[{', '}]'], ['', ''], $cat);
                     if (strpos($c, '_') !== false) {
                         $cAry  = explode('_', $c);
@@ -222,13 +251,41 @@ class Category
                         $limit = null;
                     }
                     $ids[$key] = [
-                        'id'    => $id,
+                        'id'      => $id,
                         'options' => [
                             'order' => $order,
                             'limit' => $limit
                         ]
                     ];
                 }
+            }
+        }
+
+        $cats = [];
+
+        preg_match_all('/\[\{categories_.*\}\]/', $template, $cats);
+
+        if (isset($cats[0]) && isset($cats[0][0])) {
+            foreach ($cats[0] as $cat) {
+                $c   = str_replace('}]', '', substr($cat, (strpos($cat, '_') + 1)));
+                $key = str_replace(['[{', '}]'], ['', ''], $cat);
+                if (strpos($c, '_') !== false) {
+                    $cAry  = explode('_', $c);
+                    $id    = $cAry[0];
+                    $order = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
+                    $limit = (isset($cAry[2])) ? $cAry[2] : null;
+                } else {
+                    $id    = $c;
+                    $order = 'order ASC';
+                    $limit = null;
+                }
+                $ids[$key] = [
+                    'id'      => $id,
+                    'options' => [
+                        'order' => $order,
+                        'limit' => $limit
+                    ]
+                ];
             }
         }
 

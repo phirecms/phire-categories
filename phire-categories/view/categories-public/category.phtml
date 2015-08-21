@@ -18,7 +18,11 @@
 <?php foreach ($items as $item): ?>
     <div class="item-div">
         <h3><?=$item->title; ?></h3>
+<?php if (isset($item->file)): ?>
+        <p><a href="<?=$base_path . $content_path . '/' . $item->library_folder . '/' . $item->file; ?>"><img src="<?=$item->icon; ?>" /></a></p>
+<?php elseif (isset($item->uri)): ?>
         <p><a href="<?=$item->uri; ?>"><?=$item->uri; ?></a></p>
+<?php endif; ?>
     </div>
 <?php endforeach; ?>
 <?php endif; ?>
