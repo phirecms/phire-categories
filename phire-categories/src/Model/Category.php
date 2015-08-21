@@ -29,6 +29,7 @@ class Category extends AbstractModel
                 'id'    => $category->id,
                 'title' => $category->title,
                 'uri'   => $category->uri,
+                'order' => $category->order,
                 'depth' => 0
             ], \ArrayObject::ARRAY_AS_PROPS);
             $category->depth    = 0;
@@ -374,6 +375,7 @@ class Category extends AbstractModel
                     'id'    => $c->id,
                     'title' => $c->title,
                     'uri'   => $c->uri,
+                    'order' => $c->order,
                     'depth' => $depth + 1
                 ], \ArrayObject::ARRAY_AS_PROPS);
                 $c->depth    = $depth + 1;

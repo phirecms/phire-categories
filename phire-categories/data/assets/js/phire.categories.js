@@ -63,6 +63,7 @@ jax(document).ready(function(){
 
         for (var field in json) {
             jax('#' + field).val(json[field]);
+            jax('#' + field)[0].defaultValue = json[field];
         }
     }
 });
