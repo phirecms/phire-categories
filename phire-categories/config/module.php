@@ -62,6 +62,7 @@ return [
                 'required' => [
                     'status' => 1
                 ],
+                'order'    => 'publish DESC',
                 'remove'   => 'process_content'
             ],
             'media' => [
@@ -71,6 +72,7 @@ return [
                 ],
                 'model'  => 'Phire\Media\Model\Media',
                 'method' => 'getById',
+                'order'  => 'uploaded DESC',
                 'remove' => 'rm_media'
             ]
         ],

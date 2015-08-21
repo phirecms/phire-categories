@@ -93,10 +93,14 @@ class Category extends AbstractModel
             $options = ['order' => 'order ASC'];
         }
 
-        $items = [];
+        $items   = [];
+        $orderBy = [];
+        $type    = null;
+
         $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], null, $options);
         if ($c2c->hasRows()) {
             foreach ($c2c->rows() as $c) {
+                $type = $c->type;
                 if ($fields) {
                     $filters = ['strip_tags' => null];
                     if ($this->summary_length > 0) {
@@ -113,9 +117,34 @@ class Category extends AbstractModel
                     );
                     $item = $model;
                 }
-                if ((isset($item->status) && ((int)$item->status == 1)) || !isset($item->status)) {
+
+                $allowed = true;
+                if (isset($this->settings[$c->type]['required'])) {
+                    foreach ($this->settings[$c->type]['required'] as $k => $v) {
+                        if ($item[$k] != $v) {
+                            $allowed = false;
+                        }
+                    }
+                }
+
+                if ($allowed) {
+                    if (isset($this->settings[$c->type]['order'])) {
+                        $by = substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
+                        if (isset($item[$by])) {
+                            $orderBy[$item->id] = $item[$by];
+                        }
+                    }
                     $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
                 }
+            }
+        }
+
+        if ((count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
+            $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
+            if ($order == 'DESC') {
+                array_multisort($orderBy, SORT_DESC, $items);
+            } else if ($order == 'ASC') {
+                array_multisort($orderBy, SORT_ASC, $items);
             }
         }
 
@@ -149,35 +178,14 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $c2c = Table\ContentToCategories::findBy(['category_id' => $child->id], null, $options);
-                if ($c2c->hasRows()) {
-                    $c = $c2c->rows()[0];
-
-                    if ($fields) {
-                        $filters = ['strip_tags' => null];
-                        if ($this->summary_length > 0) {
-                            $filters['substr'] = [0, $this->summary_length];
-                        };
-                        $item = \Phire\Fields\Model\FieldValue::getModelObject(
-                            $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
-                        );
-                    } else {
-                        $class = $this->settings[$c->type]['model'];
-                        $model = new $class();
-                        call_user_func_array([
-                                $model, $this->settings[$c->type]['method']], [$c->content_id]
-                        );
-                        $item = $model;
-                    }
-                    if ((isset($item->status) && ((int)$item->status == 1)) || !isset($item->status)) {
-                        $items[] = new \ArrayObject(array_merge([
-                            'category_id'    => $child->id,
-                            'category_title' => $child->title,
-                            'category_uri'   => '/category' . $child->uri,
-                            'category_total' => $c2c->count()
-                        ], $item->toArray()), \ArrayObject::ARRAY_AS_PROPS);
-                    }
-                }
+                $childItems = $this->getContentById($child->id, $options, $fields);
+                $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
+                $items[]    = new \ArrayObject(array_merge([
+                    'category_id'    => $child->id,
+                    'category_title' => $child->title,
+                    'category_uri'   => '/category' . $child->uri,
+                    'category_total' => count($childItems)
+                ], $item), \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
@@ -492,12 +500,15 @@ class Category extends AbstractModel
             $categories[] = $c;
         }
 
-        $items = [];
+        $items   = [];
+        $orderBy = [];
+        $type    = null;
 
         foreach ($categories as $cat) {
             $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], null, ['order' => 'order ASC']);
             if ($c2c->hasRows()) {
                 foreach ($c2c->rows() as $c) {
+                    $type = $c->type;
                     if ($fields) {
                         $filters = ['strip_tags' => null];
                         if ($this->summary_length > 0) {
@@ -514,12 +525,42 @@ class Category extends AbstractModel
                         );
                         $item = $model;
                     }
-                    $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+
+                    $allowed = true;
+                    if (isset($this->settings[$c->type]['required'])) {
+                        foreach ($this->settings[$c->type]['required'] as $k => $v) {
+                            if ($item[$k] != $v) {
+                                $allowed = false;
+                            }
+                        }
+                    }
+
+                    if ($allowed) {
+                        if (isset($this->settings[$c->type]['order'])) {
+                            $by = substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
+                            if (isset($item[$by])) {
+                                $orderBy[$item->id] = $item[$by];
+                            }
+                        }
+
+                        $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+                    }
+
                 }
             }
         }
 
+        if ((count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
+            $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
+            if ($order == 'DESC') {
+                array_multisort($orderBy, SORT_DESC, $items);
+            } else if ($order == 'ASC') {
+                array_multisort($orderBy, SORT_ASC, $items);
+            }
+        }
+
         $data['items'] = $items;
+
         $data['category_nav']             = $this->getNav($this->nav_config);
         $data['category_breadcrumb']      = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
         $data['category_breadcrumb_text'] = strip_tags($data['category_breadcrumb'], 'span');
