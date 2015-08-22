@@ -73,14 +73,14 @@ class Category extends AbstractModel
     }
 
     /**
-     * Get content by category ID
+     * Get category content
      *
      * @param  mixed   $id
      * @param  array   $options
      * @param  boolean $fields
      * @return array
      */
-    public function getContentById($id, array $options = null, $fields = false)
+    public function getCategoryContent($id, array $options = null, $fields = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -152,14 +152,14 @@ class Category extends AbstractModel
     }
 
     /**
-     * Get child content by category ID
+     * Get child category
      *
      * @param  mixed   $id
      * @param  array   $options
      * @param  boolean $fields
      * @return array
      */
-    public function getChildContentById($id, array $options = null, $fields = false)
+    public function getChildCategory($id, array $options = null, $fields = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -178,7 +178,7 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $childItems = $this->getContentById($child->id, $options, $fields);
+                $childItems = $this->getCategoryContent($child->id, $options, $fields);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
                 $items[]    = new \ArrayObject(array_merge([
                     'category_id'    => $child->id,

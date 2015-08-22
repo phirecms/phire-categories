@@ -88,11 +88,11 @@ class Category
                     $category->summary_length = $application->module('phire-categories')['summary_length'];
                     foreach ($ids as $key => $value) {
                         if (strpos($key, 'categories') !== false) {
-                            $items = $category->getChildContentById(
+                            $items = $category->getChildCategory(
                                 $value['id'], $value['options'], $application->isRegistered('phire-fields')
                             );
                         } else {
-                            $items = $category->getContentById(
+                            $items = $category->getCategoryContent(
                                 $value['id'], $value['options'], $application->isRegistered('phire-fields')
                             );
                         }
