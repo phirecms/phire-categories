@@ -65,13 +65,13 @@ class Category
     }
 
     /**
-     * Get all category values for the form object
+     * Init category nav and categories
      *
      * @param  AbstractController $controller
      * @param  Application        $application
      * @return void
      */
-    public static function getNav(AbstractController $controller, Application $application)
+    public static function init(AbstractController $controller, Application $application)
     {
         if ((!$_POST) && ($controller->hasView())) {
             $category = new Model\Category();
@@ -118,6 +118,64 @@ class Category
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
                 $controller->view()->phire->category = $category;
+            }
+        }
+    }
+
+    /**
+     * Get all category values for the form object
+     *
+     * @param  AbstractController $controller
+     * @param  Application        $application
+     * @return void
+     */
+    public static function parseCategories(AbstractController $controller, Application $application)
+    {
+        if (($controller->hasView()) &&
+            (($controller instanceof \Phire\Categories\Controller\IndexController) ||
+            ($controller instanceof \Phire\Content\Controller\IndexController))) {
+
+            $body = $controller->response()->getBody();
+            $ids  = self::parseCategoryIds($body);
+
+            if (count($ids) > 0) {
+                $category = new Model\Category();
+                $category->show_total     = $application->module('phire-categories')['show_total'];
+                $category->settings       = $application->module('phire-categories')['settings'];
+                $category->summary_length = $application->module('phire-categories')['summary_length'];
+                $category->settings       = $application->module('phire-categories')['settings'];
+                $category->summary_length = $application->module('phire-categories')['summary_length'];
+
+                foreach ($ids as $key => $value) {
+                    if (strpos($key, 'categories') !== false) {
+                        $items = $category->getChildCategory(
+                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                        );
+                    } else {
+                        $items = $category->getCategoryContent(
+                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                        );
+                    }
+
+                    if (count($items) > $controller->config()->pagination) {
+                        $page  = $controller->request()->getQuery('page');
+                        $limit = $controller->config()->pagination;
+                        $pages = new \Pop\Paginator\Paginator(count($items), $limit);
+                        $pages->useInput(true);
+                        $offset = ((null !== $page) && ((int)$page > 1)) ?
+                            ($page * $limit) - $limit : 0;
+                        $items = array_slice($items, $offset, $limit, true);
+                    } else {
+                        $pages = null;
+                    }
+
+
+                    $controller->view()->pages  = $pages;
+                    $controller->view()->{$key} = $items;
+                }
+
+                $controller->view()->setTemplate($body);
+                $controller->response()->setBody($controller->view()->render());
             }
         }
     }

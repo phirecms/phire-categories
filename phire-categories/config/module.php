@@ -36,19 +36,28 @@ return [
             ],
             [
                 'name'   => 'app.send.pre',
-                'action' => 'Phire\Categories\Event\Category::getNav'
+                'action' => 'Phire\Categories\Event\Category::getAll',
+                'priority' => 1000
             ],
             [
                 'name'   => 'app.send.pre',
-                'action' => 'Phire\Categories\Event\Category::getAll'
+                'action' => 'Phire\Categories\Event\Category::save',
+                'priority' => 1000
             ],
             [
                 'name'   => 'app.send.pre',
-                'action' => 'Phire\Categories\Event\Category::save'
+                'action' => 'Phire\Categories\Event\Category::delete',
+                'priority' => 1000
             ],
             [
                 'name'   => 'app.send.pre',
-                'action' => 'Phire\Categories\Event\Category::delete'
+                'action' => 'Phire\Categories\Event\Category::init',
+                'priority' => 1000
+            ],
+            [
+                'name'   => 'app.send.post',
+                'action' => 'Phire\Categories\Event\Category::parseCategories',
+                'priority' => 1000
             ]
         ],
         'settings' => [
