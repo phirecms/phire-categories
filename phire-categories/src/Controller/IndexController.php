@@ -11,6 +11,12 @@ class IndexController extends AbstractController
 {
 
     /**
+     * Current template reference
+     * @var mixed
+     */
+    protected $template = null;
+
+    /**
      * Index action method
      *
      * @return void
@@ -44,8 +50,13 @@ class IndexController extends AbstractController
                 }
 
                 $this->prepareView('categories-public/category.phtml');
-                $this->view->title = 'Category : ' . $category->title;
-                $this->view->pages = $pages;
+                $this->template = 'category.phtml';
+                $this->view->title          = 'Category : ' . $category->title;
+                $this->view->category_id    = $category->id;
+                $this->view->category_title = $category->title;
+                $this->view->category_slug  = $category->slug;
+
+                $this->view->pages          = $pages;
                 $this->view->merge($category->toArray());
                 $this->send();
             } else {
@@ -67,6 +78,28 @@ class IndexController extends AbstractController
         $this->view->title = '404 Error';
         $this->template    = -1;
         $this->send(404);
+    }
+
+    /**
+     * Get current template
+     *
+     * @return mixed
+     */
+    public function getTemplate()
+    {
+        return $this->template;
+    }
+
+    /**
+     * Set current template
+     *
+     * @param  string $template
+     * @return IndexController
+     */
+    public function setTemplate($template)
+    {
+        $this->template = $template;
+        return $this;
     }
 
     /**

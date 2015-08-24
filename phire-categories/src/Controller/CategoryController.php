@@ -111,6 +111,7 @@ class CategoryController extends AbstractController
             ' return phire.changeCategoryUri();">Generate URI</a> ]';
 
         $fields[1]['title']['attributes']['onkeyup'] = 'phire.changeTitle(this.value);';
+        $fields[1]['slug']['attributes']['onkeyup']  = "phire.changeCategoryUri();";
 
         $this->view->form = new Form\Category($fields);
         $this->view->form->addFilter('htmlentities', [ENT_QUOTES, 'UTF-8'])

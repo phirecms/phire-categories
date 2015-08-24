@@ -119,6 +119,39 @@ class Category
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
                 $controller->view()->phire->category = $category;
             }
+
+            if (($controller instanceof \Phire\Categories\Controller\IndexController) && ($controller->getTemplate() == -1)) {
+                if ($application->isRegistered('phire-templates')) {
+                    $template = \Phire\Templates\Table\Templates::findBy(['name' => 'Error']);
+                    if (isset($template->id)) {
+                        if ((null !== $template) && isset($template->id)) {
+                            if (isset($template->id)) {
+                                $device = \Phire\Templates\Event\Template::getDevice($controller->request()->getQuery('mobile'));
+                                if ((null !== $device) && ($template->device != $device)) {
+                                    $childTemplate = Table\Templates::findBy(['parent_id' => $template->id, 'device' => $device]);
+                                    if (isset($childTemplate->id)) {
+                                        $tmpl = $childTemplate->template;
+                                    } else {
+                                        $tmpl = $template->template;
+                                    }
+                                } else {
+                                    $tmpl = $template->template;
+                                }
+                                $controller->view()->setTemplate(\Phire\Templates\Event\Template::parse($tmpl));
+                            }
+                        }
+                    }
+                } else if (($application->isRegistered('phire-themes')) && ($controller->view()->isFile())) {
+                    $theme = \Phire\Themes\Table\Themes::findBy(['active' => 1]);
+                    if (isset($theme->id)) {
+                        $themePath = $_SERVER['DOCUMENT_ROOT'] . BASE_PATH . CONTENT_PATH . '/themes/' . $theme->folder . '/';
+                        if (file_exists($themePath . 'error.phtml') || file_exists($themePath . 'error.php')) {
+                            $template = file_exists($themePath . 'error.phtml') ? $themePath . 'error.phtml' : $themePath . 'error.php';
+                            $controller->view()->setTemplate($template);
+                        }
+                    }
+                }
+            }
         }
     }
 
