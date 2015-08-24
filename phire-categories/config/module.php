@@ -35,19 +35,19 @@ return [
                 'priority' => 1000
             ],
             [
-                'name'   => 'app.send',
+                'name'   => 'app.send.pre',
                 'action' => 'Phire\Categories\Event\Category::getNav'
             ],
             [
-                'name'   => 'app.send',
+                'name'   => 'app.send.pre',
                 'action' => 'Phire\Categories\Event\Category::getAll'
             ],
             [
-                'name'   => 'app.send',
+                'name'   => 'app.send.pre',
                 'action' => 'Phire\Categories\Event\Category::save'
             ],
             [
-                'name'   => 'app.send',
+                'name'   => 'app.send.pre',
                 'action' => 'Phire\Categories\Event\Category::delete'
             ]
         ],
