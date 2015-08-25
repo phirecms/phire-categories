@@ -208,8 +208,23 @@ class Category
                 }
 
                 $controller->view()->setTemplate($body);
-                $controller->response()->setBody($controller->view()->render());
+                $body = $controller->view()->render();
+                $controller->response()->setBody($body);
             }
+
+            // Clean up
+            $body = $controller->response()->getBody();
+            if (strpos($body, '[{item_') !== false) {
+                $items = [];
+                preg_match_all('/\[\{item_.*\}\]/', $body, $items);
+
+                if (isset($items[0]) && isset($items[0][0])) {
+                    foreach ($items[0] as $item) {
+                        $body = str_replace($item, '', $body);
+                    }
+                }
+            }
+            $controller->response()->setBody($body);
         }
     }
 

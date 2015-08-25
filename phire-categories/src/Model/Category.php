@@ -180,12 +180,18 @@ class Category extends AbstractModel
             foreach ($children->rows() as $child) {
                 $childItems = $this->getCategoryContent($child->id, $options, $fields);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
+                $filtered   = [];
+
+                foreach ($item as $key => $value) {
+                    $filtered['item_' . $key] = $value;
+                }
+
                 $items[]    = new \ArrayObject(array_merge([
                     'category_id'    => $child->id,
                     'category_title' => $child->title,
                     'category_uri'   => '/category' . $child->uri,
                     'category_total' => count($childItems)
-                ], $item), \ArrayObject::ARRAY_AS_PROPS);
+                ], $filtered), \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
