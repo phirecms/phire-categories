@@ -25,7 +25,8 @@ return [
                 'label' => 'Order',
                 'value' => 0,
                 'attributes' => [
-                    'size'  => 2
+                    'size'  => 2,
+                    'class' => 'order-field'
                 ]
             ],
             'id' => [
