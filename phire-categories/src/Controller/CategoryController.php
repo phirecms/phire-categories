@@ -80,7 +80,6 @@ class CategoryController extends AbstractController
      */
     public function edit($id)
     {
-
         $category = new Model\Category();
         $category->getById($id);
 
@@ -136,6 +135,33 @@ class CategoryController extends AbstractController
     }
 
     /**
+     * View action method
+     *
+     * @param  int $id
+     * @return void
+     */
+    public function viewContent($id)
+    {
+        $category = new Model\Category();
+        $category->getById($id);
+
+        if (!isset($category->id)) {
+            $this->redirect(BASE_PATH . APP_URI . '/categories');
+        }
+
+        $category->settings       = $this->application->module('phire-categories')['settings'];
+        $category->summary_length = $this->application->module('phire-categories')['summary_length'];
+        $category->show_total     = $this->application->module('phire-categories')['show_total'];
+
+        $this->prepareView('categories/view.phtml');
+
+        $this->view->title   = 'Categories : ' . $category->title;
+        $this->view->cid     = $category->id;
+        $this->view->content = $category->getCategoryContent($id, null, $this->application->isRegistered('phire-fields'));
+        $this->send();
+    }
+
+    /**
      * JSON action method
      *
      * @param  int    $id
@@ -162,6 +188,20 @@ class CategoryController extends AbstractController
 
         $this->response->setBody(json_encode($json, JSON_PRETTY_PRINT));
         $this->send(200, ['Content-Type' => 'application/json']);
+    }
+
+    /**
+     * Process action method
+     *
+     * @return void
+     */
+    public function process()
+    {
+        if ($this->request->isPost()) {
+            $category = new Model\Category();
+            $category->process($this->request->getPost());
+        }
+        $this->redirect(BASE_PATH . APP_URI . '/categories/view/' . $this->request->getPost('category_id') . '?saved=' . time());
     }
 
     /**

@@ -47,6 +47,18 @@ jax(document).ready(function(){
             return jax('#categories-form').checkValidate('checkbox', true);
         });
     }
+    if (jax('#categories-process-form')[0] != undefined) {
+        jax('#checkall').click(function(){
+            if (this.checked) {
+                jax('#categories-process-form').checkAll(this.value);
+            } else {
+                jax('#categories-process-form').uncheckAll(this.value);
+            }
+        });
+        //jax('#categories-form').submit(function(){
+        //    return jax('#categories-form').checkValidate('checkbox', true);
+        //});
+    }
     if (jax('#category-form')[0] != undefined) {
         if (jax('#uri').val() != '') {
             jax('#uri-span').val(jax('#uri').val());

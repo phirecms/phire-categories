@@ -5,6 +5,8 @@ return [
         'index',
         'add',
         'edit',
+        'view',
+        'process',
         'remove'
     ]
 ];

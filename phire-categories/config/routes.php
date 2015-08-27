@@ -30,12 +30,28 @@ return [
                 'permission' => 'edit'
             ]
         ],
+        '/categories/view/:id' => [
+            'controller' => 'Phire\Categories\Controller\CategoryController',
+            'action'     => 'viewContent',
+            'acl'        => [
+                'resource'   => 'categories',
+                'permission' => 'view'
+            ]
+        ],
         '/categories/json/:id[/:type]' => [
             'controller' => 'Phire\Categories\Controller\CategoryController',
             'action'     => 'json',
             'acl'        => [
                 'resource'   => 'categories',
                 'permission' => 'json'
+            ]
+        ],
+        '/categories/process[/]' => [
+            'controller' => 'Phire\Categories\Controller\CategoryController',
+            'action'     => 'process',
+            'acl'        => [
+                'resource'   => 'categories',
+                'permission' => 'process'
             ]
         ],
         '/categories/remove[/]' => [

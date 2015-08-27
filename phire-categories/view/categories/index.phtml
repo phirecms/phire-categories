@@ -14,7 +14,7 @@
                 <th><a href="<?=$phireUri . '/categories?sort=id';?>">#</a></th>
                 <th><a href="<?=$phireUri . '/categories?sort=title';?>">Title</a></th>
                 <th>URI</th>
-                <th><a href="<?=$phireUri . '/categories?sort=order';?>">Order</a></th>
+                <th>Total</th>
                 <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'edit')): ?>Edit<?php else: ?>&nbsp;<?php endif; ?></th>
                 <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?><input type="checkbox" name="checkall" id="checkall" value="rm_categories" /><?php else: ?>&nbsp;<?php endif; ?></th>
             </tr>
@@ -24,7 +24,7 @@
                 <td><?=$category->id; ?></td>
                 <td><?=str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', $category->depth) . (($category->depth > 0) ? '&rarr; ' : '') . $category->title; ?></td>
                 <td><a class="normal-link" href="/category<?=$category->uri; ?>" target="_blank">/category<?=$category->uri; ?></a></td>
-                <td><?=$category->order; ?></td>
+                <td><?=$category->total; ?><?php if (($category->total > 0) && ($acl->isAllowed($user->role, 'categories', 'view'))): ?> [ <a href="<?=$phireUri . '/categories/view/' . $category->id; ?>" class="normal-link">View</a> ]<?php endif; ?></td>
                 <td><?php if ($acl->isAllowed($user->role, 'categories', 'edit')): ?><a class="edit-link" href="<?=$phireUri . '/categories/edit/' . $category->id; ?>">Edit</a><?php else: ?>&nbsp;<?php endif; ?></td>
                 <td class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'remove')): ?><input type="checkbox" name="rm_categories[]" id="rm_categories<?=$i++; ?>" value="<?=$category->id; ?>" /><?php else: ?>&nbsp;<?php endif; ?></td>
             </tr>

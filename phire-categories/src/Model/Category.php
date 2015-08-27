@@ -29,6 +29,7 @@ class Category extends AbstractModel
                 'id'    => $category->id,
                 'title' => $category->title,
                 'uri'   => $category->uri,
+                'total' => Table\ContentToCategories::findBy(['category_id' => $category->id])->count(),
                 'order' => $category->order,
                 'depth' => 0
             ], \ArrayObject::ARRAY_AS_PROPS);
@@ -90,8 +91,12 @@ class Category extends AbstractModel
         }
 
         if (null === $options) {
-            $options = ['order' => 'order ASC'];
+            $options  = ['order' => 'order ASC'];
+            $override = true;
+        } else {
+            $override = false;
         }
+
 
         $items   = [];
         $orderBy = [];
@@ -100,7 +105,8 @@ class Category extends AbstractModel
         $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], null, $options);
         if ($c2c->hasRows()) {
             foreach ($c2c->rows() as $c) {
-                $type = $c->type;
+                $type  = $c->type;
+                $order = $c->order;
                 if ($fields) {
                     $filters = ['strip_tags' => null];
                     if ($this->summary_length > 0) {
@@ -128,19 +134,23 @@ class Category extends AbstractModel
                 }
 
                 if ($allowed) {
+                    $item->type  = $type;
+                    $item->order = $order;
                     if (isset($this->settings[$c->type]['order'])) {
-                        $by = substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
+                        $by = ($override) ? 'order' : substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
                         if (isset($item[$by])) {
-                            $orderBy[$item->id] = $item[$by];
+                            $orderBy[] = $item[$by];
                         }
                     }
-                    $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+                    $items[] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
                 }
             }
         }
 
         if ((count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
-            $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
+            $order = ($override) ?
+                trim(substr($options['order'], (strpos($options['order'], ' ') + 1))) :
+                trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
             if ($order == 'DESC') {
                 array_multisort($orderBy, SORT_DESC, $items);
             } else if ($order == 'ASC') {
@@ -247,6 +257,35 @@ class Category extends AbstractModel
             $this->changeDescendantUris($category->id, $category->uri);
 
             $this->data = array_merge($this->data, $category->getColumns());
+        }
+    }
+
+    /**
+     * Process category contents
+     *
+     * @param  array $post
+     * @return void
+     */
+    public function process(array $post)
+    {
+        foreach ($post as $key => $value) {
+            if (substr($key, 0, 6) == 'order_') {
+                $id  = substr($key, (strrpos($key, '_') + 1));
+                $c2c = Table\ContentToCategories::findById([(int)$id, (int)$post['category_id']]);
+                if (isset($c2c->content_id)) {
+                    $c2c->order = (int)$value;
+                    $c2c->save();
+                }
+            }
+        }
+
+        if (isset($post['process_categories'])) {
+            foreach ($post['process_categories'] as $id) {
+                $c2c = Table\ContentToCategories::findById([(int)$id, (int)$post['category_id']]);
+                if (isset($c2c->content_id)) {
+                    $c2c->delete();
+                }
+            }
         }
     }
 
@@ -389,6 +428,7 @@ class Category extends AbstractModel
                     'id'    => $c->id,
                     'title' => $c->title,
                     'uri'   => $c->uri,
+                    'total' => Table\ContentToCategories::findBy(['category_id' => $c->id])->count(),
                     'order' => $c->order,
                     'depth' => $depth + 1
                 ], \ArrayObject::ARRAY_AS_PROPS);
