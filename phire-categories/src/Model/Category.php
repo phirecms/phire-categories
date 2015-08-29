@@ -21,7 +21,7 @@ class Category extends AbstractModel
     public function getAll($sort = null, $pid = null)
     {
         $order         = (null !== $sort) ? $this->getSortOrder($sort) : 'order ASC';
-        $categories    = Table\Categories::findBy(['parent_id' => $pid], null, ['order' => $order]);
+        $categories    = Table\Categories::findBy(['parent_id' => $pid], ['order' => $order]);
         $categoriesAry = [];
 
         foreach ($categories->rows() as $category) {
@@ -102,7 +102,7 @@ class Category extends AbstractModel
         $orderBy = [];
         $type    = null;
 
-        $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], null, $options);
+        $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], $options);
         if ($c2c->hasRows()) {
             foreach ($c2c->rows() as $c) {
                 $type  = $c->type;
@@ -182,7 +182,7 @@ class Category extends AbstractModel
             $options = ['order' => 'order ASC'];
         }
 
-        $children = Table\Categories::findBy(['parent_id' => $id], null, $options);
+        $children = Table\Categories::findBy(['parent_id' => $id], $options);
 
         $items = [];
 
@@ -420,7 +420,7 @@ class Category extends AbstractModel
     protected function getChildren($category, $order, $depth = 0)
     {
         $children = [];
-        $child    = Table\Categories::findBy(['parent_id' => $category->id], null, ['order' => $order]);
+        $child    = Table\Categories::findBy(['parent_id' => $category->id], ['order' => $order]);
 
         if ($child->hasRows()) {
             foreach ($child->rows() as $c) {
@@ -451,7 +451,7 @@ class Category extends AbstractModel
     protected function getNavChildren($category, $depth = 0)
     {
         $children = [];
-        $child    = Table\Categories::findBy(['parent_id' => $category->id], null, ['order' => 'order ASC']);
+        $child    = Table\Categories::findBy(['parent_id' => $category->id], ['order' => 'order ASC']);
 
         if ($child->hasRows()) {
             foreach ($child->rows() as $c) {
@@ -551,7 +551,7 @@ class Category extends AbstractModel
         $type    = null;
 
         foreach ($categories as $cat) {
-            $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], null, ['order' => 'order ASC']);
+            $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], ['order' => 'order ASC']);
             if ($c2c->hasRows()) {
                 foreach ($c2c->rows() as $c) {
                     $type = $c->type;
