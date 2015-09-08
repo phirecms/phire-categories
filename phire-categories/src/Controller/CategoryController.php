@@ -65,7 +65,8 @@ class CategoryController extends AbstractController
                 $category = new Model\Category();
                 $category->save($this->view->form->getFields());
                 $this->view->id = $category->id;
-                $this->redirect(BASE_PATH . APP_URI . '/categories/edit/'. $category->id . '?saved=' . time());
+                $this->sess->setRequestValue('saved', true, 1);
+                $this->redirect(BASE_PATH . APP_URI . '/categories/edit/'. $category->id);
             }
         }
 
@@ -127,7 +128,8 @@ class CategoryController extends AbstractController
 
                 $category->update($this->view->form->getFields());
                 $this->view->id = $category->id;
-                $this->redirect(BASE_PATH . APP_URI . '/categories/edit/'. $category->id . '?saved=' . time());
+                $this->sess->setRequestValue('saved', true, 1);
+                $this->redirect(BASE_PATH . APP_URI . '/categories/edit/'. $category->id);
             }
         }
 
@@ -201,7 +203,8 @@ class CategoryController extends AbstractController
             $category = new Model\Category();
             $category->process($this->request->getPost());
         }
-        $this->redirect(BASE_PATH . APP_URI . '/categories/view/' . $this->request->getPost('category_id') . '?saved=' . time());
+        $this->sess->setRequestValue('saved', true, 1);
+        $this->redirect(BASE_PATH . APP_URI . '/categories/view/' . $this->request->getPost('category_id'));
     }
 
     /**
@@ -215,7 +218,8 @@ class CategoryController extends AbstractController
             $category = new Model\Category();
             $category->remove($this->request->getPost());
         }
-        $this->redirect(BASE_PATH . APP_URI . '/categories?removed=' . time());
+        $this->sess->setRequestValue('removed', true, 1);
+        $this->redirect(BASE_PATH . APP_URI . '/categories');
     }
 
     /**
