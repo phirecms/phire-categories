@@ -35,6 +35,11 @@ return [
                 'priority' => 1000
             ],
             [
+                'name'     => 'app.send.pre',
+                'action'   => 'Phire\Categories\Event\Category::setTemplate',
+                'priority' => 1000
+            ],
+            [
                 'name'   => 'app.send.pre',
                 'action' => 'Phire\Categories\Event\Category::getAll',
                 'priority' => 1000

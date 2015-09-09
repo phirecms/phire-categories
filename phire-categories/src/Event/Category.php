@@ -65,6 +65,70 @@ class Category
     }
 
     /**
+     * Set the category template
+     *
+     * @param  AbstractController $controller
+     * @param  Application        $application
+     * @return void
+     */
+    public static function setTemplate(AbstractController $controller, Application $application)
+    {
+        if ($application->isRegistered('phire-templates') && ($controller instanceof \Phire\Categories\Controller\IndexController) &&
+            ($controller->hasView()) && $controller->view()->isStream() && ($controller->getTemplate() != -1)) {
+            if (null !== $controller->view()->category_title) {
+                $template = Table\Templates::findBy(['name' => 'Category ' . $controller->view()->category_title]);
+                if (!isset($template->id)) {
+                    $template = Table\Templates::findBy(['name' => 'Category']);
+                }
+            } else {
+                $template = Table\Templates::findBy(['name' => 'Category']);
+            }
+
+            if (isset($template->id)) {
+                if (isset($template->id)) {
+                    $device = \Phire\Templates\Event\Template::getDevice($controller->request()->getQuery('mobile'));
+                    if ((null !== $device) && ($template->device != $device)) {
+                        $childTemplate = \Phire\Templates\Table\Templates::findBy(['parent_id' => $template->id, 'device' => $device]);
+                        if (isset($childTemplate->id)) {
+                            $tmpl = $childTemplate->template;
+                        } else {
+                            $tmpl = $template->template;
+                        }
+                    } else {
+                        $tmpl = $template->template;
+                    }
+                    $controller->view()->setTemplate(\Phire\Templates\Event\Template::parse($tmpl));
+                }
+            }
+        } else if ($application->isRegistered('phire-themes') && ($controller instanceof \Phire\Categories\Controller\IndexController) &&
+            ($controller->hasView()) && $controller->view()->isFile() && ($controller->getTemplate() != -1)) {
+            $theme = \Phire\Themes\Table\Themes::findBy(['active' => 1]);
+            if (isset($theme->id)) {
+                $template  = null;
+                $themePath = $_SERVER['DOCUMENT_ROOT'] . BASE_PATH . CONTENT_PATH . '/themes/' . $theme->folder . '/';
+                if (null !== $controller->view()->category_slug) {
+                    $catSlug = 'category-' . str_replace('/', '-', $controller->view()->category_slug);
+                    if (file_exists($themePath . $catSlug . '.phtml') || file_exists($themePath . $catSlug . '.php')) {
+                        $template = file_exists($themePath . $catSlug . '.phtml') ? $catSlug . '.phtml' : $catSlug . '.php';
+                    } else if (file_exists($themePath . 'category.phtml') || file_exists($themePath . 'category.php')) {
+                        $template = file_exists($themePath . 'category.phtml') ? 'category.phtml' : 'category.php';
+                    }
+                } else if (file_exists($themePath . 'category.phtml') || file_exists($themePath . 'category.php')) {
+                    $template = file_exists($themePath . 'category.phtml') ? 'category.phtml' : 'category.php';
+                }
+
+                if (null !== $template) {
+                    $device = \Phire\Themes\Event\Theme::getDevice($controller->request()->getQuery('mobile'));
+                    if ((null !== $device) && (file_exists($themePath . $device . '/' . $template))) {
+                        $template = $device . '/' . $template;
+                    }
+                    $controller->view()->setTemplate($themePath . $template);
+                }
+            }
+        }
+    }
+
+    /**
      * Init category nav and categories
      *
      * @param  AbstractController $controller
