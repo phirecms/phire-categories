@@ -74,14 +74,14 @@ class Category
     public static function setTemplate(AbstractController $controller, Application $application)
     {
         if ($application->isRegistered('phire-templates') && ($controller instanceof \Phire\Categories\Controller\IndexController) &&
-            ($controller->hasView()) && $controller->view()->isStream() && ($controller->getTemplate() != -1)) {
+            ($controller->hasView())) {
             if (null !== $controller->view()->category_title) {
-                $template = Table\Templates::findBy(['name' => 'Category ' . $controller->view()->category_title]);
+                $template = \Phire\Templates\Table\Templates::findBy(['name' => 'Category ' . $controller->view()->category_title]);
                 if (!isset($template->id)) {
-                    $template = Table\Templates::findBy(['name' => 'Category']);
+                    $template = \Phire\Templates\Table\Templates::findBy(['name' => 'Category']);
                 }
             } else {
-                $template = Table\Templates::findBy(['name' => 'Category']);
+                $template = \Phire\Templates\Table\Templates::findBy(['name' => 'Category']);
             }
 
             if (isset($template->id)) {
@@ -101,7 +101,7 @@ class Category
                 }
             }
         } else if ($application->isRegistered('phire-themes') && ($controller instanceof \Phire\Categories\Controller\IndexController) &&
-            ($controller->hasView()) && $controller->view()->isFile() && ($controller->getTemplate() != -1)) {
+            ($controller->hasView())) {
             $theme = \Phire\Themes\Table\Themes::findBy(['active' => 1]);
             if (isset($theme->id)) {
                 $template  = null;
