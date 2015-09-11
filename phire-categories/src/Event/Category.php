@@ -153,11 +153,11 @@ class Category
                     foreach ($ids as $key => $value) {
                         if (strpos($key, 'categories') !== false) {
                             $items = $category->getChildCategory(
-                                $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                                $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
                             );
                         } else {
                             $items = $category->getCategoryContent(
-                                $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                                $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
                             );
                         }
 
@@ -192,7 +192,7 @@ class Category
                             if (isset($template->id)) {
                                 $device = \Phire\Templates\Event\Template::getDevice($controller->request()->getQuery('mobile'));
                                 if ((null !== $device) && ($template->device != $device)) {
-                                    $childTemplate = Table\Templates::findBy(['parent_id' => $template->id, 'device' => $device]);
+                                    $childTemplate = \Phire\Templates\Table\Templates::findBy(['parent_id' => $template->id, 'device' => $device]);
                                     if (isset($childTemplate->id)) {
                                         $tmpl = $childTemplate->template;
                                     } else {
@@ -246,11 +246,11 @@ class Category
                 foreach ($ids as $key => $value) {
                     if (strpos($key, 'categories') !== false) {
                         $items = $category->getChildCategory(
-                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                            $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
                         );
                     } else {
                         $items = $category->getCategoryContent(
-                            $value['id'], $value['options'], $application->isRegistered('phire-fields')
+                            $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
                         );
                     }
 
@@ -411,21 +411,24 @@ class Category
                 if (($c != 'nav') && ($c != 'uri') && ($c != 'title') && ($c != 'total') && (strpos($c, '[{') === false)) {
                     $key = str_replace(['[{', '}]'], ['', ''], $cat);
                     if (strpos($c, '_') !== false) {
-                        $cAry  = explode('_', $c);
-                        $id    = $cAry[0];
-                        $order = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
-                        $limit = (isset($cAry[2])) ? $cAry[2] : null;
+                        $cAry     = explode('_', $c);
+                        $id       = $cAry[0];
+                        $order    = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
+                        $limit    = (isset($cAry[2])) ? $cAry[2] : null;
+                        $override = (isset($cAry[1])) ? true : false;
                     } else {
-                        $id    = $c;
-                        $order = 'order ASC';
-                        $limit = null;
+                        $id       = $c;
+                        $order    = 'order ASC';
+                        $limit    = null;
+                        $override = false;
                     }
                     $ids[$key] = [
                         'id'      => $id,
                         'options' => [
                             'order' => $order,
                             'limit' => $limit
-                        ]
+                        ],
+                        'override' => $override
                     ];
                 }
             }
@@ -440,21 +443,24 @@ class Category
                 $c   = str_replace('}]', '', substr($cat, (strpos($cat, '_') + 1)));
                 $key = str_replace(['[{', '}]'], ['', ''], $cat);
                 if (strpos($c, '_') !== false) {
-                    $cAry  = explode('_', $c);
-                    $id    = $cAry[0];
-                    $order = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
-                    $limit = (isset($cAry[2])) ? $cAry[2] : null;
+                    $cAry     = explode('_', $c);
+                    $id       = $cAry[0];
+                    $order    = (isset($cAry[1])) ? $cAry[1] : 'order ASC';
+                    $limit    = (isset($cAry[2])) ? $cAry[2] : null;
+                    $override = (isset($cAry[1])) ? true : false;
                 } else {
-                    $id    = $c;
-                    $order = 'order ASC';
-                    $limit = null;
+                    $id       = $c;
+                    $order    = 'order ASC';
+                    $limit    = null;
+                    $override = false;
                 }
                 $ids[$key] = [
                     'id'      => $id,
                     'options' => [
                         'order' => $order,
                         'limit' => $limit
-                    ]
+                    ],
+                    'override' => $override
                 ];
             }
         }

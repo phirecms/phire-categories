@@ -78,10 +78,11 @@ class Category extends AbstractModel
      *
      * @param  mixed   $id
      * @param  array   $options
+     * @param  boolean $override
      * @param  boolean $fields
      * @return array
      */
-    public function getCategoryContent($id, array $options = null, $fields = false)
+    public function getCategoryContent($id, array $options = null, $override = false, $fields = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -92,11 +93,7 @@ class Category extends AbstractModel
 
         if (null === $options) {
             $options  = ['order' => 'order ASC'];
-            $override = true;
-        } else {
-            $override = false;
         }
-
 
         $items   = [];
         $orderBy = [];
@@ -147,10 +144,8 @@ class Category extends AbstractModel
             }
         }
 
-        if ((count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
-            $order = ($override) ?
-                trim(substr($options['order'], (strpos($options['order'], ' ') + 1))) :
-                trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
+        if (!($override) && (count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
+            $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
             if ($order == 'DESC') {
                 array_multisort($orderBy, SORT_DESC, $items);
             } else if ($order == 'ASC') {
@@ -166,10 +161,11 @@ class Category extends AbstractModel
      *
      * @param  mixed   $id
      * @param  array   $options
+     * @param  boolean $override
      * @param  boolean $fields
      * @return array
      */
-    public function getChildCategory($id, array $options = null, $fields = false)
+    public function getChildCategory($id, array $options = null, $override = false, $fields = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -188,7 +184,7 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $childItems = $this->getCategoryContent($child->id, $options, $fields);
+                $childItems = $this->getCategoryContent($child->id, $options, $override, $fields);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
                 $filtered   = [];
 
