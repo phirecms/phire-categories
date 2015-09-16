@@ -32,6 +32,7 @@ class IndexController extends AbstractController
             $category = new Model\Category();
             $category->settings       = $this->application->module('phire-categories')['settings'];
             $category->summary_length = $this->application->module('phire-categories')['summary_length'];
+            $category->date_fields    = $this->application->module('phire-categories')['date_fields'];
             $category->show_total     = $this->application->module('phire-categories')['show_total'];
             $category->nav_config     = $this->application->module('phire-categories')['nav_config'];
             $category->getByUri($uri, $this->application->modules()->isRegistered('phire-fields'));

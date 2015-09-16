@@ -12,6 +12,20 @@ class Category extends AbstractModel
     protected $flatMap = [];
 
     /**
+     * Constructor
+     *
+     * Instantiate a model object
+     *
+     * @param  array $data
+     * @return AbstractModel
+     */
+    public function __construct(array $data = [])
+    {
+        parent::__construct($data);
+        $this->datetime_format = \Phire\Table\Config::findById('datetime_format')->value;
+    }
+
+    /**
      * Get all categories
      *
      * @param  string $sort
@@ -139,7 +153,15 @@ class Category extends AbstractModel
                             $orderBy[] = $item[$by];
                         }
                     }
-                    $items[] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+
+                    $i = $item->toArray();
+                    foreach ($i as $key => $value) {
+                        if (in_array($key, $this->date_fields)) {
+                            $i[$key] = date($this->datetime_format, strtotime($value));
+                        }
+                    }
+
+                    $items[] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
                 }
             }
         }
@@ -585,7 +607,14 @@ class Category extends AbstractModel
                             }
                         }
 
-                        $items[$item->id] = new \ArrayObject($item->toArray(), \ArrayObject::ARRAY_AS_PROPS);
+                        $i = $item->toArray();
+                        foreach ($i as $key => $value) {
+                            if (in_array($key, $this->date_fields)) {
+                                $i[$key] = date($this->datetime_format, strtotime($value));
+                            }
+                        }
+
+                        $items[$item->id] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
                     }
 
                 }

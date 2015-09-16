@@ -150,6 +150,7 @@ class Category
                 if (count($ids) > 0) {
                     $category->settings       = $application->module('phire-categories')['settings'];
                     $category->summary_length = $application->module('phire-categories')['summary_length'];
+                    $category->date_fields    = $application->module('phire-categories')['date_fields'];
                     foreach ($ids as $key => $value) {
                         if (strpos($key, 'categories') !== false) {
                             $items = $category->getChildCategory(
@@ -181,6 +182,7 @@ class Category
                 ($controller instanceof \Phire\Categories\Controller\IndexController)) && ($controller->view()->isFile())) {
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
+                $category->date_fields    = $application->module('phire-categories')['date_fields'];
                 $controller->view()->phire->category = $category;
             }
 
@@ -240,8 +242,7 @@ class Category
                 $category->show_total     = $application->module('phire-categories')['show_total'];
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];
-                $category->settings       = $application->module('phire-categories')['settings'];
-                $category->summary_length = $application->module('phire-categories')['summary_length'];
+                $category->date_fields    = $application->module('phire-categories')['date_fields'];
 
                 foreach ($ids as $key => $value) {
                     if (strpos($key, 'categories') !== false) {

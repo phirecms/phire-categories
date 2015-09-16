@@ -92,6 +92,9 @@ return [
         ],
         'separator'       => ' &gt; ',
         'summary_length'  => 150,
+        'date_fields'     => [
+            'publish', 'uploaded'
+        ],
         'show_total'      => true,
         'nav_config'      => [
             'top'    => [
