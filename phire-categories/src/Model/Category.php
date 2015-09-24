@@ -75,28 +75,28 @@ class Category extends AbstractModel
     /**
      * Get category for template
      *
-     * @param  string  $uri
-     * @param  boolean $fields
+     * @param  string              $uri
+     * @param  \Pop\Module\Manager $modules
      * @return void
      */
-    public function getByUri($uri, $fields = false)
+    public function getByUri($uri, \Pop\Module\Manager $modules = null)
     {
         $category = Table\Categories::findBy(['uri' => $uri]);
         if (isset($category->id)) {
-            $this->getCategory($category, $fields);
+            $this->getCategory($category, $modules);
         }
     }
 
     /**
      * Get category content
      *
-     * @param  mixed   $id
-     * @param  array   $options
-     * @param  boolean $override
-     * @param  boolean $fields
+     * @param  mixed               $id
+     * @param  array               $options
+     * @param  boolean             $override
+     * @param  \Pop\Module\Manager $modules
      * @return array
      */
-    public function getCategoryContent($id, array $options = null, $override = false, $fields = false)
+    public function getCategoryContent($id, array $options = null, $override = false, $modules = null)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -118,13 +118,22 @@ class Category extends AbstractModel
             foreach ($c2c->rows() as $c) {
                 $type  = $c->type;
                 $order = $c->order;
-                if ($fields) {
+                if ((null !== $modules) && ($modules->isRegistered('phire-fields'))) {
                     $filters = ['strip_tags' => null];
                     if ($this->summary_length > 0) {
                         $filters['substr'] = [0, $this->summary_length];
                     };
                     $item = \Phire\Fields\Model\FieldValue::getModelObject(
                         $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
+                    );
+                } else if ((null !== $modules) && ($modules->isRegistered('phire-fields-plus'))) {
+                    $filters = ['strip_tags' => null];
+                    if ($this->summary_length > 0) {
+                        $filters['substr'] = [0, $this->summary_length];
+                    };
+
+                    $item = \Phire\FieldsPlus\Model\FieldValue::getModelObject(
+                        DB_PREFIX . $this->settings[$c->type]['table'], $this->settings[$c->type]['model'], $c->content_id, $filters
                     );
                 } else {
                     $class = $this->settings[$c->type]['model'];
@@ -184,10 +193,10 @@ class Category extends AbstractModel
      * @param  mixed   $id
      * @param  array   $options
      * @param  boolean $override
-     * @param  boolean $fields
+     * @param  \Pop\Module\Manager $modules
      * @return array
      */
-    public function getChildCategory($id, array $options = null, $override = false, $fields = false)
+    public function getChildCategory($id, array $options = null, $override = false, $module = null)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -206,7 +215,7 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $childItems = $this->getCategoryContent($child->id, $options, $override, $fields);
+                $childItems = $this->getCategoryContent($child->id, $options, $override, $module);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
                 $filtered   = [];
 
@@ -535,15 +544,18 @@ class Category extends AbstractModel
     /**
      * Get content
      *
-     * @param  Table\Categories $category
-     * @param  boolean          $fields
+     * @param  Table\Categories    $category
+     * @param  \Pop\Module\Manager $modules
      * @return void
      */
-    protected function getCategory(Table\Categories $category, $fields = false)
+    protected function getCategory(Table\Categories $category, \Pop\Module\Manager $modules = null)
     {
-        if ($fields) {
+        if ((null !== $modules) && (($modules->isRegistered('phire-fields')))) {
             $c    = \Phire\Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
+        } else if ((null !== $modules) && (($modules->isRegistered('phire-fields-plus')))) {
+            $c    = \Phire\FieldsPlus\Model\FieldValue::getModelObject(DB_PREFIX . 'categories', 'Phire\\Categories\\Model\\Category', $category->id);
+            $data = (array)$c;
         } else {
             $data = $category->getColumns();
         }
@@ -573,13 +585,21 @@ class Category extends AbstractModel
             if ($c2c->hasRows()) {
                 foreach ($c2c->rows() as $c) {
                     $type = $c->type;
-                    if ($fields) {
+                    if ((null !== $modules) && (($modules->isRegistered('phire-fields')))) {
                         $filters = ['strip_tags' => null];
                         if ($this->summary_length > 0) {
                             $filters['substr'] = [0, $this->summary_length];
                         };
                         $item = \Phire\Fields\Model\FieldValue::getModelObject(
                             $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
+                        );
+                    } else if ((null !== $modules) && (($modules->isRegistered('phire-fields-plus')))) {
+                        $filters = ['strip_tags' => null];
+                        if ($this->summary_length > 0) {
+                            $filters['substr'] = [0, $this->summary_length];
+                        };
+                        $item = \Phire\FieldsPlus\Model\FieldValue::getModelObject(
+                            DB_PREFIX . $this->settings[$c->type]['table'], $this->settings[$c->type]['model'], $c->content_id, $filters
                         );
                     } else {
                         $class = $this->settings[$c->type]['model'];

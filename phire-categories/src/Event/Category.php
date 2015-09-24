@@ -154,11 +154,11 @@ class Category
                     foreach ($ids as $key => $value) {
                         if (strpos($key, 'categories') !== false) {
                             $items = $category->getChildCategory(
-                                $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
+                                $value['id'], $value['options'], $value['override'], $application->modules()
                             );
                         } else {
                             $items = $category->getCategoryContent(
-                                $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
+                                $value['id'], $value['options'], $value['override'], $application->modules()
                             );
                         }
 
@@ -247,11 +247,11 @@ class Category
                 foreach ($ids as $key => $value) {
                     if (strpos($key, 'categories') !== false) {
                         $items = $category->getChildCategory(
-                            $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
+                            $value['id'], $value['options'], $value['override'], $application->modules()
                         );
                     } else {
                         $items = $category->getCategoryContent(
-                            $value['id'], $value['options'], $value['override'], $application->isRegistered('phire-fields')
+                            $value['id'], $value['options'], $value['override'], $application->modules()
                         );
                     }
 

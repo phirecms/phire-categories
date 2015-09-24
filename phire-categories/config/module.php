@@ -71,6 +71,7 @@ return [
                     'name'  => 'Phire\Content\Form\Content',
                     'group' => 0
                 ],
+                'table'    => 'content',
                 'model'    => 'Phire\Content\Model\Content',
                 'method'   => 'getById',
                 'required' => [
@@ -84,6 +85,7 @@ return [
                     'name'  => 'Phire\Media\Form\Media',
                     'group' => 0
                 ],
+                'table'  => 'media',
                 'model'  => 'Phire\Media\Model\Media',
                 'method' => 'getById',
                 'order'  => 'uploaded DESC',
