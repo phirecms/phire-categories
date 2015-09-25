@@ -126,15 +126,6 @@ class Category extends AbstractModel
                     $item = \Phire\Fields\Model\FieldValue::getModelObject(
                         $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                     );
-                } else if ((null !== $modules) && ($modules->isRegistered('phire-fields-plus'))) {
-                    $filters = ['strip_tags' => null];
-                    if ($this->summary_length > 0) {
-                        $filters['substr'] = [0, $this->summary_length];
-                    };
-
-                    $item = \Phire\FieldsPlus\Model\FieldValue::getModelObject(
-                        DB_PREFIX . $this->settings[$c->type]['table'], $this->settings[$c->type]['model'], $c->content_id, $filters
-                    );
                 } else {
                     $class = $this->settings[$c->type]['model'];
                     $model = new $class();
@@ -553,9 +544,6 @@ class Category extends AbstractModel
         if ((null !== $modules) && (($modules->isRegistered('phire-fields')))) {
             $c    = \Phire\Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
-        } else if ((null !== $modules) && (($modules->isRegistered('phire-fields-plus')))) {
-            $c    = \Phire\FieldsPlus\Model\FieldValue::getModelObject(DB_PREFIX . 'categories', 'Phire\\Categories\\Model\\Category', $category->id);
-            $data = $c->toArray();
         } else {
             $data = $category->getColumns();
         }
@@ -592,14 +580,6 @@ class Category extends AbstractModel
                         };
                         $item = \Phire\Fields\Model\FieldValue::getModelObject(
                             $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
-                        );
-                    } else if ((null !== $modules) && (($modules->isRegistered('phire-fields-plus')))) {
-                        $filters = ['strip_tags' => null];
-                        if ($this->summary_length > 0) {
-                            $filters['substr'] = [0, $this->summary_length];
-                        };
-                        $item = \Phire\FieldsPlus\Model\FieldValue::getModelObject(
-                            DB_PREFIX . $this->settings[$c->type]['table'], $this->settings[$c->type]['model'], $c->content_id, $filters
                         );
                     } else {
                         $class = $this->settings[$c->type]['model'];
