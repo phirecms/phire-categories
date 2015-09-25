@@ -555,7 +555,7 @@ class Category extends AbstractModel
             $data = $c->toArray();
         } else if ((null !== $modules) && (($modules->isRegistered('phire-fields-plus')))) {
             $c    = \Phire\FieldsPlus\Model\FieldValue::getModelObject(DB_PREFIX . 'categories', 'Phire\\Categories\\Model\\Category', $category->id);
-            $data = (array)$c;
+            $data = $c->toArray();
         } else {
             $data = $category->getColumns();
         }
