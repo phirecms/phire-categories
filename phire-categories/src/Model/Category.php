@@ -113,7 +113,7 @@ class Category extends AbstractModel
         $orderBy = [];
         $type    = null;
 
-        $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], $options);
+        $c2c   = Table\ContentToCategories::findBy(['category_id' => $id], ['order' => 'order ASC']);
         if ($c2c->hasRows()) {
             foreach ($c2c->rows() as $c) {
                 $type  = $c->type;
@@ -148,7 +148,9 @@ class Category extends AbstractModel
                     $item->type  = $type;
                     $item->order = $order;
                     if (isset($this->settings[$c->type]['order'])) {
-                        $by = ($override) ? 'order' : substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
+                        $by = (($override) && isset($options['order'])) ?
+                            substr($options['order'], 0, strpos($options['order'], ' ')) :
+                            substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
                         if (isset($item[$by])) {
                             $orderBy[] = $item[$by];
                         }
@@ -173,6 +175,17 @@ class Category extends AbstractModel
             } else if ($order == 'ASC') {
                 array_multisort($orderBy, SORT_ASC, $items);
             }
+        } else if (($override) && (count($orderBy) > 0) && isset($options['order'])) {
+            $order = trim(substr($options['order'], (strpos($options['order'], ' ') + 1)));
+            if ($order == 'DESC') {
+                array_multisort($orderBy, SORT_DESC, $items);
+            } else if ($order == 'ASC') {
+                array_multisort($orderBy, SORT_ASC, $items);
+            }
+        }
+
+        if (isset($options['limit']) && ((int)$options['limit'] > 0)) {
+            $items = array_slice($items, 0, (int)$options['limit']);
         }
 
         return $items;
@@ -187,7 +200,7 @@ class Category extends AbstractModel
      * @param  \Pop\Module\Manager $modules
      * @return array
      */
-    public function getChildCategory($id, array $options = null, $override = false, $module = null)
+    public function getChildCategory($id, array $options = null, $override = false, \Pop\Module\Manager $modules = null)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -206,7 +219,7 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $childItems = $this->getCategoryContent($child->id, $options, $override, $module);
+                $childItems = $this->getCategoryContent($child->id, $options, $override, $modules);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
                 $filtered   = [];
 
