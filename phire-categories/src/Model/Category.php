@@ -676,29 +676,34 @@ class Category extends AbstractModel
      */
     protected function formatDateAndTime($value)
     {
-        $values = [];
+        $values = [
+            'month'  => null,
+            'day'    => null,
+            'year'   => null,
+            'hour'   => null,
+            'minute' => null,
+            'period' => null
+        ];
 
-        // Has time
-        if (strpos($value, ' ') !== false) {
-            $date = substr($publish, 0, strpos($value, ' '));
-            $time = substr($publish, (strpos($value, ' ') + 1));
-        } else {
-            $date = $value;
-            $time = null;
-        }
+        if (!empty($value) && ($value != '0000-00-00 00:00:00') && ($value != '0000-00-00')) {
+            // Has time
+            if (strpos($value, ' ') !== false) {
+                $date = substr($value, 0, strpos($value, ' '));
+                $time = substr($value, (strpos($value, ' ') + 1));
+            } else {
+                $date = $value;
+                $time = null;
+            }
 
-        $values['month'] = date($this->month_format, strtotime($date));
-        $values['day']   = date($this->day_format, strtotime($date));
-        $values['year']  = date($this->year_format, strtotime($date));
+            $values['month'] = date($this->month_format, strtotime($date));
+            $values['day']   = date($this->day_format, strtotime($date));
+            $values['year']  = date($this->year_format, strtotime($date));
 
-        if (null !== $time) {
-            $values['hour']   = date($this->hour_format, strtotime($time));
-            $values['minute'] = date($this->minute_format, strtotime($time));
-            $values['period'] = date($this->period_format, strtotime($time));
-        } else {
-            $values['hour']   = null;
-            $values['minute'] = null;
-            $values['period'] = null;
+            if (null !== $time) {
+                $values['hour']   = date($this->hour_format, strtotime($time));
+                $values['minute'] = date($this->minute_format, strtotime($time));
+                $values['period'] = date($this->period_format, strtotime($time));
+            }
         }
 
         return $values;
