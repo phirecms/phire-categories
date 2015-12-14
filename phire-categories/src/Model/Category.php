@@ -22,7 +22,17 @@ class Category extends AbstractModel
     public function __construct(array $data = [])
     {
         parent::__construct($data);
-        $this->datetime_format = \Phire\Table\Config::findById('datetime_format')->value;
+
+        $contentConfig = include __DIR__ . '/../../../phire-content/config/module.php';
+
+        $this->date_format   = $contentConfig['phire-content']['date_format'];
+        $this->month_format  = $contentConfig['phire-content']['month_format'];
+        $this->day_format    = $contentConfig['phire-content']['day_format'];
+        $this->year_format   = $contentConfig['phire-content']['year_format'];
+        $this->time_format   = $contentConfig['phire-content']['time_format'];
+        $this->hour_format   = $contentConfig['phire-content']['hour_format'];
+        $this->minute_format = $contentConfig['phire-content']['minute_format'];
+        $this->period_format = $contentConfig['phire-content']['period_format'];
     }
 
     /**
@@ -159,7 +169,10 @@ class Category extends AbstractModel
                     $i = $item->toArray();
                     foreach ($i as $key => $value) {
                         if (in_array($key, $this->date_fields)) {
-                            $i[$key] = date($this->datetime_format, strtotime($value));
+                            $dateValues = $this->formatDateAndTime($value);
+                            foreach ($dateValues as $k => $v) {
+                                $i[$key . '_' . $k] = $v;
+                            }
                         }
                     }
 
@@ -623,7 +636,10 @@ class Category extends AbstractModel
                         $i = $item->toArray();
                         foreach ($i as $key => $value) {
                             if (in_array($key, $this->date_fields)) {
-                                $i[$key] = date($this->datetime_format, strtotime($value));
+                                $dateValues = $this->formatDateAndTime($value);
+                                foreach ($dateValues as $k => $v) {
+                                    $i[$key . '_' . $k] = $v;
+                                }
                             }
                         }
 
@@ -651,4 +667,41 @@ class Category extends AbstractModel
 
         $this->data = array_merge($this->data, $data);
     }
+
+    /**
+     * Format date and time values
+     *
+     * @param  string $value
+     * @return array
+     */
+    protected function formatDateAndTime($value)
+    {
+        $values = [];
+
+        // Has time
+        if (strpos($value, ' ') !== false) {
+            $date = substr($publish, 0, strpos($value, ' '));
+            $time = substr($publish, (strpos($value, ' ') + 1));
+        } else {
+            $date = $value;
+            $time = null;
+        }
+
+        $values['month'] = date($this->month_format, strtotime($date));
+        $values['day']   = date($this->day_format, strtotime($date));
+        $values['year']  = date($this->year_format, strtotime($date));
+
+        if (null !== $time) {
+            $values['hour']   = date($this->hour_format, strtotime($time));
+            $values['minute'] = date($this->minute_format, strtotime($time));
+            $values['period'] = date($this->period_format, strtotime($time));
+        } else {
+            $values['hour']   = null;
+            $values['minute'] = null;
+            $values['period'] = null;
+        }
+
+        return $values;
+    }
+
 }
