@@ -92,6 +92,14 @@ return [
                 'remove' => 'rm_media'
             ]
         ],
+        'date_format'      => 'n/j/Y',
+        'month_format'     => 'M',
+        'day_format'       => 'j',
+        'year_format'      => 'Y',
+        'time_format'      => 'H:i',
+        'hour_format'      => 'H',
+        'minute_format'    => 'i',
+        'period_format'    => 'A',
         'separator'       => ' &gt; ',
         'summary_length'  => 150,
         'date_fields'     => [

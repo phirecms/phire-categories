@@ -19,9 +19,10 @@ class Category
     public static function bootstrap(Application $application)
     {
         $forms    = $application->config()['forms'];
-        $settings = $application->module('phire-categories')['settings'];
+        $config   = $application->module('phire-categories');
+        $settings = $config['settings'];
 
-        $cat = new Model\Category();
+        $cat = new Model\Category([], $config);
         $cat->getAll();
 
         $categoryValues = [];
@@ -138,7 +139,7 @@ class Category
     public static function init(AbstractController $controller, Application $application)
     {
         if ((!$_POST) && ($controller->hasView())) {
-            $category = new Model\Category();
+            $category = new Model\Category([], $application->module('phire-categories'));
             $category->show_total = $application->module('phire-categories')['show_total'];
             $controller->view()->category_nav = $category->getNav($application->module('phire-categories')['nav_config']);
 
@@ -238,7 +239,7 @@ class Category
             $ids  = self::parseCategoryIds($body);
 
             if (count($ids) > 0) {
-                $category = new Model\Category();
+                $category = new Model\Category([], $application->module('phire-categories'));
                 $category->show_total     = $application->module('phire-categories')['show_total'];
                 $category->settings       = $application->module('phire-categories')['settings'];
                 $category->summary_length = $application->module('phire-categories')['summary_length'];

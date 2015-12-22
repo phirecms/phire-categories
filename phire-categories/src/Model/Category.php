@@ -17,22 +17,23 @@ class Category extends AbstractModel
      * Instantiate a model object
      *
      * @param  array $data
+     * @param  mixed $config
      * @return AbstractModel
      */
-    public function __construct(array $data = [])
+    public function __construct(array $data = [], $config = null)
     {
         parent::__construct($data);
 
-        $contentConfig = include __DIR__ . '/../../../phire-content/config/module.php';
-
-        $this->date_format   = $contentConfig['phire-content']['date_format'];
-        $this->month_format  = $contentConfig['phire-content']['month_format'];
-        $this->day_format    = $contentConfig['phire-content']['day_format'];
-        $this->year_format   = $contentConfig['phire-content']['year_format'];
-        $this->time_format   = $contentConfig['phire-content']['time_format'];
-        $this->hour_format   = $contentConfig['phire-content']['hour_format'];
-        $this->minute_format = $contentConfig['phire-content']['minute_format'];
-        $this->period_format = $contentConfig['phire-content']['period_format'];
+        if ((null !== $config) && isset($config['date_format'])) {
+            $this->date_format   = $config['date_format'];
+            $this->month_format  = $config['month_format'];
+            $this->day_format    = $config['day_format'];
+            $this->year_format   = $config['year_format'];
+            $this->time_format   = $config['time_format'];
+            $this->hour_format   = $config['hour_format'];
+            $this->minute_format = $config['minute_format'];
+            $this->period_format = $config['period_format'];
+        }
     }
 
     /**
@@ -677,15 +678,17 @@ class Category extends AbstractModel
     protected function formatDateAndTime($value)
     {
         $values = [
+            'date'   => null,
             'month'  => null,
             'day'    => null,
             'year'   => null,
+            'time'   => null,
             'hour'   => null,
             'minute' => null,
             'period' => null
         ];
 
-        if (!empty($value) && ($value != '0000-00-00 00:00:00') && ($value != '0000-00-00')) {
+        if (isset($this->date_format) && !empty($value) && ($value != '0000-00-00 00:00:00') && ($value != '0000-00-00')) {
             // Has time
             if (strpos($value, ' ') !== false) {
                 $date = substr($value, 0, strpos($value, ' '));
@@ -695,11 +698,13 @@ class Category extends AbstractModel
                 $time = null;
             }
 
+            $values['date']  = date($this->date_format, strtotime($date));
             $values['month'] = date($this->month_format, strtotime($date));
             $values['day']   = date($this->day_format, strtotime($date));
             $values['year']  = date($this->year_format, strtotime($date));
 
             if (null !== $time) {
+                $values['time']   = date($this->time_format, strtotime($time));
                 $values['hour']   = date($this->hour_format, strtotime($time));
                 $values['minute'] = date($this->minute_format, strtotime($time));
                 $values['period'] = date($this->period_format, strtotime($time));
