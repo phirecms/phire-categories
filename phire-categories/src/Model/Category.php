@@ -177,7 +177,9 @@ class Category extends AbstractModel
                         }
                     }
 
-                    $items[] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
+                    if ((!isset($i['expire'])) || (isset($i['expire']) && !empty($i['expire']) && (strtotime($i['expire']) >= time()))) {
+                        $items[] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
+                    }
                 }
             }
         }
