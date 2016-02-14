@@ -108,8 +108,9 @@ return [
         'show_total'      => true,
         'nav_config'      => [
             'top'    => [
-                'node' => 'ul',
-                'id'   => 'category-nav'
+                'node'  => 'ul',
+                'id'    => 'category-nav',
+                'class' => 'category-nav'
             ],
             'parent' => [
                 'node' => 'ul'
