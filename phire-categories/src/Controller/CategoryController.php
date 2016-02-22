@@ -160,7 +160,7 @@ class CategoryController extends AbstractController
 
         $this->view->title   = 'Categories : ' . $category->title;
         $this->view->cid     = $category->id;
-        $this->view->content = $category->getCategoryContent($id, null, $this->application->modules());
+        $this->view->content = $category->getCategoryViewContent($id);
         $this->send();
     }
 

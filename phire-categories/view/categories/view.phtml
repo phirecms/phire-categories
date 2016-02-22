@@ -12,6 +12,7 @@
             <th>#</th>
             <th>Title</th>
             <th>Type</th>
+            <th>Status</th>
             <th class="text-center">Order</th>
             <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="checkall" id="checkall" value="process_categories" /><?php else: ?>&nbsp;<?php endif; ?></th>
         </tr>
@@ -29,6 +30,20 @@ else:
 endif;
 ?></td>
             <td><?=$c->type; ?></td>
+            <td><?php
+switch ($c->item_status):
+    case -1:
+        echo '<strong class="red">Unpublished</strong>';
+        break;
+    case 0:
+        echo '<strong class="red">Expired</strong>';
+        break;
+    case 2:
+        echo '<strong class="blue">Scheduled</strong>';
+        break;
+    default:
+        echo '<strong class="green">Published</strong>';
+endswitch; ?></td>
             <td class="text-center"><input type="text" name="order_<?=$c->id; ?>" value="<?=(int)$c->order; ?>" class="module-order" size="2" /></td>
             <td class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="process_categories[]" id="process_categories<?=$i++; ?>" value="<?=$c->id; ?>" /><?php else: ?>&nbsp;<?php endif; ?></td>
         </tr>
