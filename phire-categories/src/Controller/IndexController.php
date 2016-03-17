@@ -35,7 +35,7 @@ class IndexController extends AbstractController
             $category->date_fields    = $this->application->module('phire-categories')['date_fields'];
             $category->show_total     = $this->application->module('phire-categories')['show_total'];
             $category->nav_config     = $this->application->module('phire-categories')['nav_config'];
-            $category->getByUri($uri, $this->application->modules());
+            $category->getByUri($uri);
 
             if (isset($category->id)) {
                 if (count($category->items) > $this->config->pagination) {

@@ -75,7 +75,9 @@ return [
                 'model'    => 'Phire\Content\Model\Content',
                 'method'   => 'getById',
                 'required' => [
-                    'status' => 1
+                    'status'    => 1,
+                    'publish<=' => date('Y-m-d H:i:s'),
+                    'expire>='  => date('Y-m-d H:i:s')
                 ],
                 'order'    => 'publish DESC',
                 'remove'   => 'process_content'

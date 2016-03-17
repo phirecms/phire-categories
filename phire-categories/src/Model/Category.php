@@ -86,28 +86,26 @@ class Category extends AbstractModel
     /**
      * Get category for template
      *
-     * @param  string              $uri
-     * @param  \Pop\Module\Manager $modules
+     * @param  string $uri
      * @return void
      */
-    public function getByUri($uri, \Pop\Module\Manager $modules = null)
+    public function getByUri($uri)
     {
         $category = Table\Categories::findBy(['uri' => $uri]);
         if (isset($category->id)) {
-            $this->getCategory($category, $modules);
+            $this->getCategory($category);
         }
     }
 
     /**
      * Get category content
      *
-     * @param  mixed               $id
-     * @param  array               $options
-     * @param  boolean             $override
-     * @param  \Pop\Module\Manager $modules
+     * @param  mixed   $id
+     * @param  array   $options
+     * @param  boolean $override
      * @return array
      */
-    public function getCategoryContent($id, array $options = null, $override = false, $modules = null)
+    public function getCategoryContent($id, array $options = null, $override = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -166,7 +164,7 @@ class Category extends AbstractModel
             foreach ($c2c->rows() as $c) {
                 $type  = $c->type;
                 $order = $c->order;
-                if ((null !== $modules) && ($modules->isRegistered('phire-fields'))) {
+                if (class_exists('Phire\Fields\Model\FieldValue')) {
                     $filters = ['strip_tags' => null];
                     if ($this->summary_length > 0) {
                         $filters['substr'] = [0, $this->summary_length];
@@ -186,8 +184,37 @@ class Category extends AbstractModel
                 $allowed = true;
                 if (isset($this->settings[$c->type]['required'])) {
                     foreach ($this->settings[$c->type]['required'] as $k => $v) {
-                        if ($item[$k] != $v) {
-                            $allowed = false;
+                        if (substr($k, -1) == '=') {
+                            $op = substr($k, -2);
+                            $k  = substr($k, 0, -2);
+                            if (null !== $item[$k]) {
+                                $isDate = (date('Y-m-d H:i:s', strtotime($item[$k])) == $item[$k]);
+                                if ($op == '>=') {
+                                    if ($isDate) {
+                                        if (!(strtotime($item[$k]) >= strtotime($v))) {
+                                            $allowed = false;
+                                        }
+                                    } else {
+                                        if (!($item[$k] >= $v)) {
+                                            $allowed = false;
+                                        }
+                                    }
+                                } else {
+                                    if ($isDate) {
+                                        if (!(strtotime($item[$k]) <= strtotime($v))) {
+                                            $allowed = false;
+                                        }
+                                    } else {
+                                        if (!($item[$k] <= $v)) {
+                                            $allowed = false;
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            if ($item[$k] != $v) {
+                                $allowed = false;
+                            }
                         }
                     }
                 }
@@ -252,10 +279,9 @@ class Category extends AbstractModel
      * @param  mixed   $id
      * @param  array   $options
      * @param  boolean $override
-     * @param  \Pop\Module\Manager $modules
      * @return array
      */
-    public function getChildCategory($id, array $options = null, $override = false, \Pop\Module\Manager $modules = null)
+    public function getChildCategory($id, array $options = null, $override = false)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -274,7 +300,7 @@ class Category extends AbstractModel
 
         if ($children->hasRows()) {
             foreach ($children->rows() as $child) {
-                $childItems = $this->getCategoryContent($child->id, $options, $override, $modules);
+                $childItems = $this->getCategoryContent($child->id, $options, $override);
                 $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
                 $filtered   = [];
 
@@ -672,13 +698,12 @@ class Category extends AbstractModel
     /**
      * Get content
      *
-     * @param  Table\Categories    $category
-     * @param  \Pop\Module\Manager $modules
+     * @param  Table\Categories $category
      * @return void
      */
-    protected function getCategory(Table\Categories $category, \Pop\Module\Manager $modules = null)
+    protected function getCategory(Table\Categories $category)
     {
-        if ((null !== $modules) && (($modules->isRegistered('phire-fields')))) {
+        if (class_exists('Phire\Fields\Model\FieldValue')) {
             $c    = \Phire\Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
             $data = $c->toArray();
         } else {
@@ -710,7 +735,7 @@ class Category extends AbstractModel
             if ($c2c->hasRows()) {
                 foreach ($c2c->rows() as $c) {
                     $type = $c->type;
-                    if ((null !== $modules) && (($modules->isRegistered('phire-fields')))) {
+                    if (class_exists('Phire\Fields\Model\FieldValue')) {
                         $filters = ['strip_tags' => null];
                         if ($this->summary_length > 0) {
                             $filters['substr'] = [0, $this->summary_length];
@@ -730,8 +755,37 @@ class Category extends AbstractModel
                     $allowed = true;
                     if (isset($this->settings[$c->type]['required'])) {
                         foreach ($this->settings[$c->type]['required'] as $k => $v) {
-                            if ($item[$k] != $v) {
-                                $allowed = false;
+                            if (substr($k, -1) == '=') {
+                                $op = substr($k, -2);
+                                $k  = substr($k, 0, -2);
+                                if (null !== $item[$k]) {
+                                    $isDate = (date('Y-m-d H:i:s', strtotime($item[$k])) == $item[$k]);
+                                    if ($op == '>=') {
+                                        if ($isDate) {
+                                            if (!(strtotime($item[$k]) >= strtotime($v))) {
+                                                $allowed = false;
+                                            }
+                                        } else {
+                                            if (!($item[$k] >= $v)) {
+                                                $allowed = false;
+                                            }
+                                        }
+                                    } else {
+                                        if ($isDate) {
+                                            if (!(strtotime($item[$k]) <= strtotime($v))) {
+                                                $allowed = false;
+                                            }
+                                        } else {
+                                            if (!($item[$k] <= $v)) {
+                                                $allowed = false;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                if ($item[$k] != $v) {
+                                    $allowed = false;
+                                }
                             }
                         }
                     }
