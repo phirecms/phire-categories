@@ -18,7 +18,7 @@ class Category extends AbstractModel
      *
      * @param  array $data
      * @param  mixed $config
-     * @return AbstractModel
+     * @return self
      */
     public function __construct(array $data = [], $config = null)
     {
@@ -588,6 +588,25 @@ class Category extends AbstractModel
     public function getFlatMap()
     {
         return $this->flatMap;
+    }
+
+    /**
+     * Get category values for form field
+     *
+     * @return array
+     */
+    public function getCategoryValues()
+    {
+        $categoryValues = [];
+
+        foreach ($this->flatMap as $c) {
+            $categoryValues[$c->id] = '<input class="category-order-value" type="text" value="0" size="2" name="category_order_' .
+                $c->id . '" id="category_order_' . $c->id . '"/>' .
+                str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
+                '<span class="category-checkbox-value">' . $c->title . '</span>';
+        }
+
+        return $categoryValues;
     }
 
     /**

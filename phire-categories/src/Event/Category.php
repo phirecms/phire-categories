@@ -25,15 +25,8 @@ class Category
         $cat = new Model\Category([], $config);
         $cat->getAll();
 
-        $categoryValues = [];
-
         if (count($cat->getFlatMap()) > 0) {
-            foreach ($cat->getFlatMap() as $c) {
-                $categoryValues[$c->id] = '<input class="category-order-value" type="text" value="0" size="2" name="category_order_' .
-                    $c->id . '" id="category_order_' . $c->id . '"/>' .
-                    str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $c->depth) . (($c->depth > 0) ? '&rarr; ' : '') .
-                    '<span class="category-checkbox-value">' . $c->title . '</span>';
-            }
+            $categoryValues = $cat->getCategoryValues();
 
             foreach ($settings as $name => $setting) {
                 if (isset($forms[$setting['form']['name']])) {
