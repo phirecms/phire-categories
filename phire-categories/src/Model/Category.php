@@ -162,13 +162,11 @@ class Category extends AbstractModel
         }
         if ($c2c->hasRows()) {
             foreach ($c2c->rows() as $c) {
-                $type  = $c->type;
-                $order = $c->order;
+                $ct      = Table\Categories::findById($c->category_id);
+                $type    = $c->type;
+                $order   = $c->order;
+                $filters = ($ct->filter) ? $this->filters : [];
                 if (class_exists('Phire\Fields\Model\FieldValue')) {
-                    $filters = ['strip_tags' => null];
-                    if ($this->summary_length > 0) {
-                        $filters['substr'] = [0, $this->summary_length];
-                    };
                     $item = \Phire\Fields\Model\FieldValue::getModelObject(
                         $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                     );
@@ -406,6 +404,7 @@ class Category extends AbstractModel
             'uri'       => $fields['uri'],
             'slug'      => $fields['slug'],
             'order'     => (int)$fields['order'],
+            'filter'    => (int)$fields['filter'],
             'hierarchy' => $this->getHierarchy($parentId)
         ]);
         $category->save();
@@ -432,6 +431,7 @@ class Category extends AbstractModel
             $category->uri       = $fields['uri'];
             $category->slug      = $fields['slug'];
             $category->order     = (int)$fields['order'];
+            $category->filter    = (int)$fields['filter'];
             $category->hierarchy = $this->getHierarchy($parentId);
             $category->save();
 
@@ -753,12 +753,10 @@ class Category extends AbstractModel
             $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], ['order' => 'order ASC']);
             if ($c2c->hasRows()) {
                 foreach ($c2c->rows() as $c) {
+                    $ct   = Table\Categories::findById($c->category_id);
                     $type = $c->type;
+                    $filters = ($ct->filter) ? $this->filters : [];
                     if (class_exists('Phire\Fields\Model\FieldValue')) {
-                        $filters = ['strip_tags' => null];
-                        if ($this->summary_length > 0) {
-                            $filters['substr'] = [0, $this->summary_length];
-                        };
                         $item = \Phire\Fields\Model\FieldValue::getModelObject(
                             $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
                         );

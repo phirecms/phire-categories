@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `[{prefix}]categories` (
   `uri` varchar(255) NOT NULL,
   `slug` varchar(255),
   `order` int(16),
+  `filter` int(1),
   `hierarchy` varchar(255),
   PRIMARY KEY (`id`),
   INDEX `category_parent_id` (`parent_id`),

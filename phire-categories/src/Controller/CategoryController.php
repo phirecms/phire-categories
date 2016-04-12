@@ -151,10 +151,10 @@ class CategoryController extends AbstractController
             $this->redirect(BASE_PATH . APP_URI . '/categories');
         }
 
-        $category->settings       = $this->application->module('phire-categories')['settings'];
-        $category->summary_length = $this->application->module('phire-categories')['summary_length'];
-        $category->date_fields    = $this->application->module('phire-categories')['date_fields'];
-        $category->show_total     = $this->application->module('phire-categories')['show_total'];
+        $category->settings    = $this->application->module('phire-categories')['settings'];
+        $category->filters     = $this->application->module('phire-categories')['filters'];
+        $category->date_fields = $this->application->module('phire-categories')['date_fields'];
+        $category->show_total  = $this->application->module('phire-categories')['show_total'];
 
         $this->prepareView('categories/view.phtml');
 

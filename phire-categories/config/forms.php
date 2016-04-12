@@ -29,6 +29,15 @@ return [
                     'class' => 'order-field'
                 ]
             ],
+            'filter' => [
+                'type'  => 'radio',
+                'label' => 'Filter',
+                'value' => [
+                    '1' => 'Yes',
+                    '0' => 'No'
+                ],
+                'marked' => 1
+            ],
             'id' => [
                 'type'  => 'hidden',
                 'value' => 0

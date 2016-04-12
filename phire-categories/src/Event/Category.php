@@ -142,9 +142,9 @@ class Category
                 $ids = self::parseCategoryIds($controller->view()->getTemplate()->getTemplate());
 
                 if (count($ids) > 0) {
-                    $category->settings       = $application->module('phire-categories')['settings'];
-                    $category->summary_length = $application->module('phire-categories')['summary_length'];
-                    $category->date_fields    = $application->module('phire-categories')['date_fields'];
+                    $category->settings    = $application->module('phire-categories')['settings'];
+                    $category->filters     = $application->module('phire-categories')['filters'];
+                    $category->date_fields = $application->module('phire-categories')['date_fields'];
                     foreach ($ids as $key => $value) {
                         if (strpos($key, 'categories') !== false) {
                             $items = $category->getChildCategory(
@@ -174,9 +174,9 @@ class Category
                 }
             } else if ((($controller instanceof \Phire\Content\Controller\IndexController) ||
                 ($controller instanceof \Phire\Categories\Controller\IndexController)) && ($controller->view()->isFile())) {
-                $category->settings       = $application->module('phire-categories')['settings'];
-                $category->summary_length = $application->module('phire-categories')['summary_length'];
-                $category->date_fields    = $application->module('phire-categories')['date_fields'];
+                $category->settings    = $application->module('phire-categories')['settings'];
+                $category->filters     = $application->module('phire-categories')['filters'];
+                $category->date_fields = $application->module('phire-categories')['date_fields'];
                 $controller->view()->phire->category = $category;
             }
 
@@ -235,7 +235,7 @@ class Category
                 $category = new Model\Category([], $application->module('phire-categories'));
                 $category->show_total     = $application->module('phire-categories')['show_total'];
                 $category->settings       = $application->module('phire-categories')['settings'];
-                $category->summary_length = $application->module('phire-categories')['summary_length'];
+                $category->filters        = $application->module('phire-categories')['filters'];
                 $category->date_fields    = $application->module('phire-categories')['date_fields'];
 
                 foreach ($ids as $key => $value) {

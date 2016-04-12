@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS "[{prefix}]categories" (
   "uri" varchar NOT NULL,
   "slug" varchar,
   "order" integer,
+  "filter" integer,
   "hierarchy" varchar,
   UNIQUE ("id"),
   CONSTRAINT "fk_category_parent_id" FOREIGN KEY ("parent_id") REFERENCES "[{prefix}]categories" ("id") ON DELETE CASCADE ON UPDATE CASCADE

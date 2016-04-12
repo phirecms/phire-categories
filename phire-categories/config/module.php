@@ -102,8 +102,11 @@ return [
         'hour_format'      => 'H',
         'minute_format'    => 'i',
         'period_format'    => 'A',
-        'separator'       => ' &gt; ',
-        'summary_length'  => 150,
+        'separator'        => ' &gt; ',
+        'filters'          => [
+            'strip_tags' => null,
+            'substr'     => [0, 150]
+        ],
         'date_fields'     => [
             'publish', 'expire', 'uploaded'
         ],
