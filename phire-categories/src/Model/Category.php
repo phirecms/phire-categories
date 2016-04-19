@@ -360,6 +360,7 @@ class Category extends AbstractModel
                     }
                 }
 
+                /*
                 $meetsReq = true;
 
                 if (isset($this->settings[$c->type]['required'])) {
@@ -369,8 +370,47 @@ class Category extends AbstractModel
                         }
                     }
                 }
+                */
 
-                if (!$meetsReq) {
+                $allowed = true;
+                if (isset($this->settings[$c->type]['required'])) {
+                    foreach ($this->settings[$c->type]['required'] as $k => $v) {
+                        if (substr($k, -1) == '=') {
+                            $op = substr($k, -2);
+                            $k  = substr($k, 0, -2);
+                            if (null !== $i[$k]) {
+                                $isDate = (date('Y-m-d H:i:s', strtotime($i[$k])) == $i[$k]);
+                                if ($op == '>=') {
+                                    if ($isDate) {
+                                        if (!(strtotime($i[$k]) >= strtotime($v))) {
+                                            $allowed = false;
+                                        }
+                                    } else {
+                                        if (!($i[$k] >= $v)) {
+                                            $allowed = false;
+                                        }
+                                    }
+                                } else {
+                                    if ($isDate) {
+                                        if (!(strtotime($i[$k]) <= strtotime($v))) {
+                                            $allowed = false;
+                                        }
+                                    } else {
+                                        if (!($i[$k] <= $v)) {
+                                            $allowed = false;
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            if ($i[$k] != $v) {
+                                $allowed = false;
+                            }
+                        }
+                    }
+                }
+
+                if (!$allowed) {
                     $i['item_status'] = -1;
                 } else if (isset($i['publish']) && (strtotime($i['publish']) > time())) {
                     $i['item_status'] = 2;
