@@ -55,9 +55,6 @@ jax(document).ready(function(){
                 jax('#categories-process-form').uncheckAll(this.value);
             }
         });
-        //jax('#categories-form').submit(function(){
-        //    return jax('#categories-form').checkValidate('checkbox', true);
-        //});
     }
     if (jax('#category-form')[0] != undefined) {
         if (jax('#uri').val() != '') {

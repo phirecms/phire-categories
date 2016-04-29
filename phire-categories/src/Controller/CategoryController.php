@@ -151,16 +151,14 @@ class CategoryController extends AbstractController
             $this->redirect(BASE_PATH . APP_URI . '/categories');
         }
 
-        $category->settings    = $this->application->module('phire-categories')['settings'];
         $category->filters     = $this->application->module('phire-categories')['filters'];
-        $category->date_fields = $this->application->module('phire-categories')['date_fields'];
         $category->show_total  = $this->application->module('phire-categories')['show_total'];
 
         $this->prepareView('categories/view.phtml');
 
-        $this->view->title   = 'Categories : ' . $category->title;
-        $this->view->cid     = $category->id;
-        $this->view->content = $category->getCategoryViewContent($id);
+        $this->view->title = 'Categories : ' . $category->title;
+        $this->view->cid   = $category->id;
+        $this->view->items = $category->getCategoryViewItems($id);
         $this->send();
     }
 
@@ -175,8 +173,10 @@ class CategoryController extends AbstractController
     {
         $json = [];
         if (null !== $type) {
-            $c2c = Table\ContentToCategories::findBy(['content_id' => $id, 'type' => $type]);
-            foreach ($c2c->rows() as $c) {
+            $findBy = ($type == 'media') ?
+                ['content_id' => null, 'media_id' => $id] : ['content_id' => $id, 'media_id' => null];
+            $catItems = Table\CategoryItems::findBy($findBy);
+            foreach ($catItems->rows() as $c) {
                 if ($c->order > 0) {
                     $json['category_order_' . $c->category_id] = $c->order;
                 }

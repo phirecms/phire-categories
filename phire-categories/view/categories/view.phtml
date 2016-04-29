@@ -3,7 +3,7 @@
     <nav id="sub-nav">
         <nav><a href="<?=$phireUri; ?>/categories">Back</a></nav>
     </nav>
-<?php if (count($content) > 0): ?>
+<?php if (count($items) > 0): ?>
 <?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?>
     <form id="categories-process-form" action="<?=$phireUri . '/categories/process'; ?>" method="post">
 <?php endif; ?>
@@ -12,40 +12,17 @@
             <th>#</th>
             <th>Title</th>
             <th>Type</th>
-            <th>Status</th>
             <th class="text-center">Order</th>
-            <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="checkall" id="checkall" value="process_categories" /><?php else: ?>&nbsp;<?php endif; ?></th>
+            <th class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="checkall" id="checkall" value="rm_category_items" /><?php else: ?>&nbsp;<?php endif; ?></th>
         </tr>
 <?php $i = 1; ?>
-<?php foreach ($content as $c): ?>
+<?php foreach ($items as $it): ?>
         <tr>
-            <td><?=$c->id; ?></td>
-            <td><?php
-if (isset($c->name)):
-    echo $c->name;
-elseif (isset($c->title)):
-    echo $c->title;
-else:
-    echo '[ N/A ]';
-endif;
-?></td>
-            <td><?=$c->type; ?></td>
-            <td><?php
-switch ($c->item_status):
-    case -1:
-        echo '<strong class="red">Unpublished</strong>';
-        break;
-    case 0:
-        echo '<strong class="red">Expired</strong>';
-        break;
-    case 2:
-        echo '<strong class="blue">Scheduled</strong>';
-        break;
-    default:
-        echo '<strong class="green">Published</strong>';
-endswitch; ?></td>
-            <td class="text-center"><input type="text" name="order_<?=$c->id; ?>" value="<?=(int)$c->order; ?>" class="module-order" size="2" /></td>
-            <td class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="process_categories[]" id="process_categories<?=$i++; ?>" value="<?=$c->id; ?>" /><?php else: ?>&nbsp;<?php endif; ?></td>
+            <td><?=$it['item_id']; ?></td>
+            <td><?=$it['title']; ?></td>
+            <td><?=$it['type']; ?></td>
+            <td class="text-center"><input type="text" name="order_<?=$it['type']; ?>_<?=$it['item_id']; ?>" value="<?=(int)$it['order']; ?>" class="module-order" size="2" /></td>
+            <td class="text-center"><?php if ($acl->isAllowed($user->role, 'categories', 'process')): ?><input type="checkbox" name="rm_category_items[]" id="rm_category_items<?=$i++; ?>" value="<?=$it['type']; ?>_<?=$it['item_id']; ?>" /><?php else: ?>&nbsp;<?php endif; ?></td>
         </tr>
 <?php endforeach; ?>
     </table>
@@ -54,6 +31,6 @@ endswitch; ?></td>
     </form>
 <?php endif; ?>
 <?php else: ?>
-    <p>There are currently no content in this category.</p>
+    <p>There are currently no items in this category.</p>
 <?php endif; ?>
 <?php include $phireFooter; ?>

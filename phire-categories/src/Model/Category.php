@@ -12,31 +12,6 @@ class Category extends AbstractModel
     protected $flatMap = [];
 
     /**
-     * Constructor
-     *
-     * Instantiate a model object
-     *
-     * @param  array $data
-     * @param  mixed $config
-     * @return self
-     */
-    public function __construct(array $data = [], $config = null)
-    {
-        parent::__construct($data);
-
-        if ((null !== $config) && isset($config['date_format'])) {
-            $this->date_format   = $config['date_format'];
-            $this->month_format  = $config['month_format'];
-            $this->day_format    = $config['day_format'];
-            $this->year_format   = $config['year_format'];
-            $this->time_format   = $config['time_format'];
-            $this->hour_format   = $config['hour_format'];
-            $this->minute_format = $config['minute_format'];
-            $this->period_format = $config['period_format'];
-        }
-    }
-
-    /**
      * Get all categories
      *
      * @param  string $sort
@@ -54,7 +29,7 @@ class Category extends AbstractModel
                 'id'    => $category->id,
                 'title' => $category->title,
                 'uri'   => $category->uri,
-                'total' => Table\ContentToCategories::findBy(['category_id' => $category->id])->count(),
+                'total' => Table\CategoryItems::findBy(['category_id' => $category->id])->count(),
                 'order' => $category->order,
                 'depth' => 0
             ], \ArrayObject::ARRAY_AS_PROPS);
@@ -64,6 +39,63 @@ class Category extends AbstractModel
         }
 
         return $categoriesAry;
+    }
+
+    /**
+     * Get category items
+     *
+     * @param  int    $limit
+     * @param  int    $page
+     * @return array
+     */
+    public function getItems($limit = null, $page = null)
+    {
+        $rows = [];
+
+        if (isset($this->data['id'])) {
+            $sql = Table\CategoryItems::sql();
+
+            $sql->select()
+                ->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
+                ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
+                ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
+                ->where('category_id = :category_id');
+
+            if (null !== $limit) {
+                $page = ((null !== $page) && ((int)$page > 1)) ?
+                    ($page * $limit) - $limit : null;
+
+                $sql->select()->limit($limit)->offset($page);
+            }
+
+            if (isset($this->data['order_by_field']) && isset($this->data['order_by_field'])) {
+                $by    = $this->data['order_by_field'];
+                $order = $this->data['order_by_order'];
+            } else {
+                $by    = DB_PREFIX . 'category_items.order';
+                $order = 'ASC';
+            }
+            $sql->select()->orderBy($by, $order);
+
+            $rows = Table\CategoryItems::execute((string)$sql, ['category_id' => $this->id])->rows();
+        }
+
+        if (count($rows) && class_exists('Phire\Fields\Model\FieldValue')) {
+            foreach ($rows as $key => $value) {
+                if (!empty($value['media_id'])) {
+                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
+                        'Phire\Media\Model\Media', [$value['media_id']], 'getById', $this->data['filters']
+                    );
+                } else {
+                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
+                        'Phire\Content\Model\Content', [$value['content_id']], 'getById', $this->data['filters']
+                    );
+                }
+                $rows[$key] = new \ArrayObject(array_merge((array)$value, $item->toArray()), \ArrayObject::ARRAY_AS_PROPS);
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -93,338 +125,11 @@ class Category extends AbstractModel
     {
         $category = Table\Categories::findBy(['uri' => $uri]);
         if (isset($category->id)) {
-            $this->getCategory($category);
+            $data = $category->getColumns();
+            $data['category_parent_id'] = $data['parent_id'];
+            unset($data['parent_id']);
+            $this->data = array_merge($this->data, $data);
         }
-    }
-
-    /**
-     * Get category content
-     *
-     * @param  mixed   $id
-     * @param  array   $options
-     * @param  boolean $override
-     * @return array
-     */
-    public function getCategoryContent($id, array $options = null, $override = false)
-    {
-        if (!is_numeric($id)) {
-            $category = Table\Categories::findBy(['title' => $id]);
-            if (isset($category->id)) {
-                $id = $category->id;
-            }
-        }
-
-        if (null === $options) {
-            $options  = ['order' => 'order ASC'];
-        }
-
-        $items      = [];
-        $orderBy    = [];
-        $type       = null;
-        $preOrdered = false;
-
-        if (isset($options['order']) && (substr($options['order'], 0, 5) !== 'order')) {
-            $c2c = Table\ContentToCategories::findBy(['category_id' => $id]);
-            if ($c2c->hasRows()) {
-                $type = $c2c->rows()[0]->type;
-                $all  = true;
-                foreach ($c2c->rows() as $c) {
-                    if ($c->type != $type) {
-                        $all = false;
-                        break;
-                    }
-                }
-                if (($all) && isset($this->data['settings'][$type])) {
-                    $order = ($options['order'] != $this->data['settings'][$type]['order']) ? $options['order'] : $this->data['settings'][$type]['order'];
-                    $orderAry = explode(' ', $order);
-                    $sql = Table\ContentToCategories::sql();
-                    $sql->select([
-                        'content_id'  => DB_PREFIX . 'content_to_categories.content_id',
-                        'category_id' => DB_PREFIX . 'content_to_categories.category_id',
-                        'type'        => DB_PREFIX . 'content_to_categories.type',
-                        'order'       => DB_PREFIX . 'content_to_categories.order',
-                        $orderAry[0]  => DB_PREFIX . $this->data['settings'][$type]['table'] . '.' . $orderAry[0],
-                    ])->join(
-                        DB_PREFIX . $this->data['settings'][$type]['table'],
-                        [DB_PREFIX . 'content_to_categories.content_id' => DB_PREFIX . $this->data['settings'][$type]['table'] . '.id']
-                    )->orderBy($orderAry[0], $orderAry[1]);
-
-                    $c2c        = Table\ContentToCategories::query((string)$sql);
-                    $preOrdered = true;
-                } else {
-                    $c2c = Table\ContentToCategories::findBy(['category_id' => $id], ['order' => 'order ASC']);
-                }
-            } else {
-                $c2c = Table\ContentToCategories::findBy(['category_id' => $id], ['order' => 'order ASC']);
-            }
-        } else {
-            $c2c = Table\ContentToCategories::findBy(['category_id' => $id], ['order' => 'order ASC']);
-        }
-        if ($c2c->hasRows()) {
-            foreach ($c2c->rows() as $c) {
-                $ct      = Table\Categories::findById($c->category_id);
-                $type    = $c->type;
-                $order   = $c->order;
-                $filters = ($ct->filter) ? $this->filters : [];
-                if (class_exists('Phire\Fields\Model\FieldValue')) {
-                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
-                        $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
-                    );
-                } else {
-                    $class = $this->settings[$c->type]['model'];
-                    $model = new $class();
-                    call_user_func_array([
-                        $model, $this->settings[$c->type]['method']], [$c->content_id]
-                    );
-                    $item = $model;
-                }
-
-                $allowed = true;
-                if (isset($this->settings[$c->type]['required'])) {
-                    foreach ($this->settings[$c->type]['required'] as $k => $v) {
-                        if (substr($k, -1) == '=') {
-                            $op = substr($k, -2);
-                            $k  = substr($k, 0, -2);
-                            if (null !== $item[$k]) {
-                                $isDate = (date('Y-m-d H:i:s', strtotime($item[$k])) == $item[$k]);
-                                if ($op == '>=') {
-                                    if ($isDate) {
-                                        if (!(strtotime($item[$k]) >= strtotime($v))) {
-                                            $allowed = false;
-                                        }
-                                    } else {
-                                        if (!($item[$k] >= $v)) {
-                                            $allowed = false;
-                                        }
-                                    }
-                                } else {
-                                    if ($isDate) {
-                                        if (!(strtotime($item[$k]) <= strtotime($v))) {
-                                            $allowed = false;
-                                        }
-                                    } else {
-                                        if (!($item[$k] <= $v)) {
-                                            $allowed = false;
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            if ($item[$k] != $v) {
-                                $allowed = false;
-                            }
-                        }
-                    }
-                }
-
-                if ($allowed) {
-                    $item->type  = $type;
-                    $item->order = $order;
-                    if (isset($this->settings[$c->type]['order'])) {
-                        $by = (($override) && isset($options['order'])) ?
-                            substr($options['order'], 0, strpos($options['order'], ' ')) :
-                            substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
-                        if (isset($item[$by])) {
-                            $orderBy[] = $item[$by];
-                        }
-                    }
-
-                    $i = $item->toArray();
-                    foreach ($i as $key => $value) {
-                        if (in_array($key, $this->date_fields)) {
-                            $dateValues = $this->formatDateAndTime($value);
-                            foreach ($dateValues as $k => $v) {
-                                $i[$key . '_' . $k] = $v;
-                            }
-                        }
-                    }
-
-                    if ((!isset($i['expire'])) || (isset($i['expire']) && !empty($i['expire']) && (strtotime($i['expire']) >= time()))) {
-                        $items[] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
-                    }
-                }
-            }
-        }
-
-        if (!($preOrdered)) {
-            if (!($override) && (count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
-                $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
-                if ($order == 'DESC') {
-                    array_multisort($orderBy, SORT_DESC, $items);
-                } else if ($order == 'ASC') {
-                    array_multisort($orderBy, SORT_ASC, $items);
-                }
-            } else if (($override) && (count($orderBy) > 0) && isset($options['order'])) {
-                $order = trim(substr($options['order'], (strpos($options['order'], ' ') + 1)));
-                if ($order == 'DESC') {
-                    array_multisort($orderBy, SORT_DESC, $items);
-                } else if ($order == 'ASC') {
-                    array_multisort($orderBy, SORT_ASC, $items);
-                }
-            }
-        }
-
-        if (isset($options['limit']) && ((int)$options['limit'] > 0)) {
-            $items = array_slice($items, 0, (int)$options['limit']);
-        }
-
-        return $items;
-    }
-
-    /**
-     * Get child category
-     *
-     * @param  mixed   $id
-     * @param  array   $options
-     * @param  boolean $override
-     * @return array
-     */
-    public function getChildCategory($id, array $options = null, $override = false)
-    {
-        if (!is_numeric($id)) {
-            $category = Table\Categories::findBy(['title' => $id]);
-            if (isset($category->id)) {
-                $id = $category->id;
-            }
-        }
-
-        if (null === $options) {
-            $options = ['order' => 'order ASC'];
-        }
-
-        $children = Table\Categories::findBy(['parent_id' => $id], $options);
-
-        $items = [];
-
-        if ($children->hasRows()) {
-            foreach ($children->rows() as $child) {
-                $childItems = $this->getCategoryContent($child->id, $options, $override);
-                $item       = (count($childItems) > 0) ? (array)array_shift($childItems) : [];
-                $filtered   = [];
-
-                foreach ($item as $key => $value) {
-                    $filtered['item_' . $key] = $value;
-                }
-
-                $items[]    = new \ArrayObject(array_merge([
-                    'category_id'    => $child->id,
-                    'category_title' => $child->title,
-                    'category_uri'   => '/category' . $child->uri,
-                    'category_total' => count($childItems)
-                ], $filtered), \ArrayObject::ARRAY_AS_PROPS);
-            }
-        }
-
-        return $items;
-    }
-
-    /**
-     * Get category view content
-     *
-     * @param  mixed $id
-     * @return array
-     */
-    public function getCategoryViewContent($id)
-    {
-        $items   = [];
-        $orderBy = [];
-        $type    = null;
-        $c2c     = Table\ContentToCategories::findBy(['category_id' => $id], ['order' => 'order ASC']);
-        if ($c2c->hasRows()) {
-            foreach ($c2c->rows() as $c) {
-                $type  = $c->type;
-                $order = $c->order;
-                $class = $this->settings[$c->type]['model'];
-                $model = new $class();
-                call_user_func_array([
-                    $model, $this->settings[$c->type]['method']], [$c->content_id]
-                );
-                $item = $model;
-
-                $item->type  = $type;
-                $item->order = $order;
-                if (isset($this->settings[$c->type]['order'])) {
-                    $by = substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
-                    if (isset($item[$by])) {
-                        $orderBy[] = $item[$by];
-                    }
-                }
-
-                $i = $item->toArray();
-                foreach ($i as $key => $value) {
-                    if (in_array($key, $this->date_fields)) {
-                        $dateValues = $this->formatDateAndTime($value);
-                        foreach ($dateValues as $k => $v) {
-                            $i[$key . '_' . $k] = $v;
-                        }
-                    }
-                }
-
-                /*
-                $meetsReq = true;
-
-                if (isset($this->settings[$c->type]['required'])) {
-                    foreach ($this->settings[$c->type]['required'] as $req => $reqValue) {
-                        if ((isset($i[$req]) && ($i[$req] != $reqValue)) || (!isset($i[$req]))) {
-                            $meetsReq = false;
-                        }
-                    }
-                }
-                */
-
-                $allowed = true;
-                if (isset($this->settings[$c->type]['required'])) {
-                    foreach ($this->settings[$c->type]['required'] as $k => $v) {
-                        if (substr($k, -1) == '=') {
-                            $op = substr($k, -2);
-                            $k  = substr($k, 0, -2);
-                            if (null !== $i[$k]) {
-                                $isDate = (date('Y-m-d H:i:s', strtotime($i[$k])) == $i[$k]);
-                                if ($op == '>=') {
-                                    if ($isDate) {
-                                        if (!(strtotime($i[$k]) >= strtotime($v))) {
-                                            $allowed = false;
-                                        }
-                                    } else {
-                                        if (!($i[$k] >= $v)) {
-                                            $allowed = false;
-                                        }
-                                    }
-                                } else {
-                                    if ($isDate) {
-                                        if (!(strtotime($i[$k]) <= strtotime($v))) {
-                                            $allowed = false;
-                                        }
-                                    } else {
-                                        if (!($i[$k] <= $v)) {
-                                            $allowed = false;
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            if ($i[$k] != $v) {
-                                $allowed = false;
-                            }
-                        }
-                    }
-                }
-
-                if (!$allowed) {
-                    $i['item_status'] = -1;
-                } else if (isset($i['publish']) && (strtotime($i['publish']) > time())) {
-                    $i['item_status'] = 2;
-                } else if ((!isset($i['expire'])) || (isset($i['expire']) && !empty($i['expire']) && (strtotime($i['expire']) >= time()))) {
-                    $i['item_status'] = 1;
-                } else {
-                    $i['item_status'] = 0;
-                }
-
-                $items[] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
-            }
-        }
-
-        return $items;
     }
 
     /**
@@ -439,13 +144,16 @@ class Category extends AbstractModel
             (int)$fields['category_parent_id'] : null);
 
         $category = new Table\Categories([
-            'parent_id' => $parentId,
-            'title'     => $fields['title'],
-            'uri'       => $fields['uri'],
-            'slug'      => $fields['slug'],
-            'order'     => (int)$fields['order'],
-            'filter'    => (int)$fields['filter'],
-            'hierarchy' => $this->getHierarchy($parentId)
+            'parent_id'      => $parentId,
+            'title'          => $fields['title'],
+            'uri'            => $fields['uri'],
+            'slug'           => $fields['slug'],
+            'order'          => (int)$fields['order'],
+            'order_by_field' => $fields['order_by_field'],
+            'order_by_order' => $fields['order_by_order'],
+            'filter'         => (int)$fields['filter'],
+            'pagination'     => (int)$fields['pagination'],
+            'hierarchy'      => $this->getHierarchy($parentId)
         ]);
         $category->save();
 
@@ -466,13 +174,16 @@ class Category extends AbstractModel
             $parentId = ((isset($fields['category_parent_id']) && ($fields['category_parent_id'] != '----')) ?
                 (int)$fields['category_parent_id'] : null);
 
-            $category->parent_id = $parentId;
-            $category->title     = $fields['title'];
-            $category->uri       = $fields['uri'];
-            $category->slug      = $fields['slug'];
-            $category->order     = (int)$fields['order'];
-            $category->filter    = (int)$fields['filter'];
-            $category->hierarchy = $this->getHierarchy($parentId);
+            $category->parent_id      = $parentId;
+            $category->title          = $fields['title'];
+            $category->uri            = $fields['uri'];
+            $category->slug           = $fields['slug'];
+            $category->order          = (int)$fields['order'];
+            $category->order_by_field = $fields['order_by_field'];
+            $category->order_by_order = $fields['order_by_order'];
+            $category->filter         = (int)$fields['filter'];
+            $category->pagination     = (int)$fields['pagination'];
+            $category->hierarchy      = $this->getHierarchy($parentId);
             $category->save();
 
             $this->changeDescendantUris($category->id, $category->uri);
@@ -491,20 +202,27 @@ class Category extends AbstractModel
     {
         foreach ($post as $key => $value) {
             if (substr($key, 0, 6) == 'order_') {
-                $id  = substr($key, (strrpos($key, '_') + 1));
-                $c2c = Table\ContentToCategories::findById([(int)$id, (int)$post['category_id']]);
-                if (isset($c2c->content_id)) {
-                    $c2c->order = (int)$value;
-                    $c2c->save();
+                $key      = substr($key, (strpos($key, '_') + 1));
+                $orderAry = explode('_', $key);
+                $catItem  = ($orderAry[0] == 'media') ?
+                    Table\CategoryMedia::findById([(int)$post['category_id'], (int)$orderAry[1]]) :
+                    Table\CategoryContent::findById([(int)$post['category_id'], (int)$orderAry[1]]);
+
+                if (isset($catItem->category_id)) {
+                    $catItem->order = (int)$value;
+                    $catItem->save();
                 }
             }
         }
 
-        if (isset($post['process_categories'])) {
-            foreach ($post['process_categories'] as $id) {
-                $c2c = Table\ContentToCategories::findById([(int)$id, (int)$post['category_id']]);
-                if (isset($c2c->content_id)) {
-                    $c2c->delete();
+        if (isset($post['rm_category_items'])) {
+            foreach ($post['rm_category_items'] as $item) {
+                $idAry   = explode('_', $item);
+                $catItem = ($idAry[0] == 'media') ?
+                    Table\CategoryMedia::findById([(int)$post['category_id'], (int)$idAry[1]]) :
+                    Table\CategoryContent::findById([(int)$post['category_id'], (int)$idAry[1]]);
+                if (isset($catItem->category_id)) {
+                    $catItem->delete();
                 }
             }
         }
@@ -566,7 +284,7 @@ class Category extends AbstractModel
      */
     public function getTotal($id, $depth = 0)
     {
-        $count    = Table\ContentToCategories::findBy(['category_id' => $id])->count();
+        $count    = Table\CategoryItems::findBy(['category_id' => $id])->count();
         $children = Table\Categories::findBy(['parent_id' => $id]);
 
         foreach ($children->rows() as $child) {
@@ -600,24 +318,24 @@ class Category extends AbstractModel
     }
 
     /**
-     * Determine if list of categories has pages
+     * Determine if list of category items has pages
      *
      * @param  int $limit
      * @return boolean
      */
     public function hasPages($limit)
     {
-        return (Table\Categories::findAll()->count() > $limit);
+        return (Table\CategoryItems::findBy(['category_id' => $this->id])->count() > $limit);
     }
 
     /**
-     * Get count of categories
+     * Get count of category items
      *
      * @return int
      */
     public function getCount()
     {
-        return Table\Categories::findAll()->count();
+        return Table\CategoryItems::findBy(['category_id' => $this->id])->count();
     }
 
     /**
@@ -650,6 +368,42 @@ class Category extends AbstractModel
     }
 
     /**
+     * Get category view content
+     *
+     * @param  mixed $id
+     * @return array
+     */
+    public function getCategoryViewItems($id)
+    {
+        $items    = [];
+        $catItems = Table\CategoryItems::findBy(['category_id' => $id], ['order' => 'order ASC']);
+
+        if ($catItems->hasRows()) {
+            foreach ($catItems->rows() as $c) {
+                if ($c->media_id != 0) {
+                    $media   = \Phire\Media\Table\Media::findById($c->media_id);
+                    $title   = (isset($media->id)) ? $media->title : '[N/A]';
+                    $item_id = $c->media_id;
+                    $type    = 'media';
+                } else {
+                    $content = \Phire\Content\Table\Content::findById($c->content_id);
+                    $title   = (isset($content->id)) ? $content->title : '[N/A]';
+                    $item_id = $c->content_id;
+                    $type    = 'content';
+                }
+                $items[] = [
+                    'title'   => $title,
+                    'item_id' => $item_id,
+                    'type'    => $type,
+                    'order'   => $c->order
+                ];
+            }
+        }
+
+        return $items;
+    }
+
+    /**
      * Get category children
      *
      * @param  \ArrayObject|array $category
@@ -668,7 +422,7 @@ class Category extends AbstractModel
                     'id'    => $c->id,
                     'title' => $c->title,
                     'uri'   => $c->uri,
-                    'total' => Table\ContentToCategories::findBy(['category_id' => $c->id])->count(),
+                    'total' => Table\CategoryItems::findBy(['category_id' => $c->id])->count(),
                     'order' => $c->order,
                     'depth' => $depth + 1
                 ], \ArrayObject::ARRAY_AS_PROPS);
@@ -752,142 +506,6 @@ class Category extends AbstractModel
         }
 
         return (count($parents) > 0) ? implode('|', $parents) : '';
-    }
-
-    /**
-     * Get content
-     *
-     * @param  Table\Categories $category
-     * @return void
-     */
-    protected function getCategory(Table\Categories $category)
-    {
-        if (class_exists('Phire\Fields\Model\FieldValue')) {
-            $c    = \Phire\Fields\Model\FieldValue::getModelObject('Phire\Categories\Model\Category', [$category->id]);
-            $data = $c->toArray();
-        } else {
-            $data = $category->getColumns();
-        }
-
-        $categories = [
-            new \ArrayObject([
-                'id'    => $category->id,
-                'title' => $category->title,
-                'uri'   => $category->uri,
-                'depth' => 0
-            ], \ArrayObject::ARRAY_AS_PROPS)
-        ];
-
-        $this->getAll(null, $category->id);
-
-        foreach ($this->flatMap as $c) {
-            $c->depth++;
-            $categories[] = $c;
-        }
-
-        $items   = [];
-        $orderBy = [];
-        $type    = null;
-
-        foreach ($categories as $cat) {
-            $c2c = Table\ContentToCategories::findBy(['category_id' => $cat->id], ['order' => 'order ASC']);
-            if ($c2c->hasRows()) {
-                foreach ($c2c->rows() as $c) {
-                    $ct   = Table\Categories::findById($c->category_id);
-                    $type = $c->type;
-                    $filters = ($ct->filter) ? $this->filters : [];
-                    if (class_exists('Phire\Fields\Model\FieldValue')) {
-                        $item = \Phire\Fields\Model\FieldValue::getModelObject(
-                            $this->settings[$c->type]['model'], [$c->content_id], $this->settings[$c->type]['method'], $filters
-                        );
-                    } else {
-                        $class = $this->settings[$c->type]['model'];
-                        $model = new $class();
-                        call_user_func_array([
-                            $model, $this->settings[$c->type]['method']], [$c->content_id]
-                        );
-                        $item = $model;
-                    }
-
-                    $allowed = true;
-                    if (isset($this->settings[$c->type]['required'])) {
-                        foreach ($this->settings[$c->type]['required'] as $k => $v) {
-                            if (substr($k, -1) == '=') {
-                                $op = substr($k, -2);
-                                $k  = substr($k, 0, -2);
-                                if (null !== $item[$k]) {
-                                    $isDate = (date('Y-m-d H:i:s', strtotime($item[$k])) == $item[$k]);
-                                    if ($op == '>=') {
-                                        if ($isDate) {
-                                            if (!(strtotime($item[$k]) >= strtotime($v))) {
-                                                $allowed = false;
-                                            }
-                                        } else {
-                                            if (!($item[$k] >= $v)) {
-                                                $allowed = false;
-                                            }
-                                        }
-                                    } else {
-                                        if ($isDate) {
-                                            if (!(strtotime($item[$k]) <= strtotime($v))) {
-                                                $allowed = false;
-                                            }
-                                        } else {
-                                            if (!($item[$k] <= $v)) {
-                                                $allowed = false;
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                if ($item[$k] != $v) {
-                                    $allowed = false;
-                                }
-                            }
-                        }
-                    }
-
-                    if ($allowed) {
-                        if (isset($this->settings[$c->type]['order'])) {
-                            $by = substr($this->settings[$c->type]['order'], 0, strpos($this->settings[$c->type]['order'], ' '));
-                            if (isset($item[$by])) {
-                                $orderBy[$item->id] = $item[$by];
-                            }
-                        }
-
-                        $i = $item->toArray();
-                        foreach ($i as $key => $value) {
-                            if (in_array($key, $this->date_fields)) {
-                                $dateValues = $this->formatDateAndTime($value);
-                                foreach ($dateValues as $k => $v) {
-                                    $i[$key . '_' . $k] = $v;
-                                }
-                            }
-                        }
-
-                        $items[$item->id] = new \ArrayObject($i, \ArrayObject::ARRAY_AS_PROPS);
-                    }
-
-                }
-            }
-        }
-
-        if ((count($orderBy) > 0) && (null !== $type) && isset($this->settings[$type]['order'])) {
-            $order = trim(substr($this->settings[$type]['order'], (strpos($this->settings[$type]['order'], ' ') + 1)));
-            if ($order == 'DESC') {
-                array_multisort($orderBy, SORT_DESC, $items);
-            } else if ($order == 'ASC') {
-                array_multisort($orderBy, SORT_ASC, $items);
-            }
-        }
-
-        $data['items'] = $items;
-
-        $data['category_nav']             = $this->getNav($this->nav_config);
-        $data['category_breadcrumb']      = $this->getBreadcrumb($data['id'], ((null !== $this->separator) ? $this->separator : '&gt;'));
-        $data['category_breadcrumb_text'] = strip_tags($data['category_breadcrumb'], 'span');
-
-        $this->data = array_merge($this->data, $data);
     }
 
     /**

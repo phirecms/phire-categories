@@ -4,7 +4,7 @@ namespace Phire\Categories\Table;
 
 use Pop\Db\Record;
 
-class ContentToCategories extends Record
+class CategoryItems extends Record
 {
 
     /**
@@ -17,6 +17,6 @@ class ContentToCategories extends Record
      * Primary keys
      * @var array
      */
-    protected $primaryKeys = ['content_id', 'category_id'];
+    protected $primaryKeys = ['category_id', 'content_id', 'media_id'];
 
 }

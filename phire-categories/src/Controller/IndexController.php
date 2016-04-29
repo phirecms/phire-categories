@@ -30,23 +30,17 @@ class IndexController extends AbstractController
                 $uri = substr($uri, 0, -1);
             }
             $category = new Model\Category([], $this->application->module('phire-categories'));
-            $category->settings    = $this->application->module('phire-categories')['settings'];
-            $category->filters     = $this->application->module('phire-categories')['filters'];
-            $category->date_fields = $this->application->module('phire-categories')['date_fields'];
-            $category->show_total  = $this->application->module('phire-categories')['show_total'];
-            $category->nav_config  = $this->application->module('phire-categories')['nav_config'];
             $category->getByUri($uri);
 
             if (isset($category->id)) {
-                if (count($category->items) > $this->config->pagination) {
-                    $page  = $this->request->getQuery('page');
-                    $limit = $this->config->pagination;
-                    $pages = new Paginator(count($category->items), $limit);
+                $category->filters    = ($category->filter) ? $this->application->module('phire-categories')['filters'] : [];
+                $category->show_total = $this->application->module('phire-categories')['show_total'];
+                if ($category->hasPages($category->pagination)) {
+                    $limit = $category->pagination;
+                    $pages = new Paginator($category->getCount(), $limit);
                     $pages->useInput(true);
-                    $offset = ((null !== $page) && ((int)$page > 1)) ?
-                        ($page * $limit) - $limit : 0;
-                    $category->items = array_slice($category->items, $offset, $limit, true);
                 } else {
+                    $limit = null;
                     $pages = null;
                 }
 
@@ -56,9 +50,15 @@ class IndexController extends AbstractController
                 $this->view->category_id    = $category->id;
                 $this->view->category_title = $category->title;
                 $this->view->category_slug  = $category->slug;
-
+                $this->view->category_nav   = $category->getNav($this->application->module('phire-categories')['nav_config']);
                 $this->view->pages          = $pages;
-                $this->view->merge($category->toArray());
+
+                $this->view->category_breadcrumb = $category->getBreadcrumb(
+                    $category->id, $this->application->module('phire-categories')['separator']
+                );
+
+                $this->view->items = $category->getItems($limit, $this->request->getQuery('page'));
+
                 $this->send();
             } else {
                 $this->error();
