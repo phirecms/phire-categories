@@ -50,7 +50,8 @@ class Category extends AbstractModel
      */
     public function getItems($limit = null, $page = null)
     {
-        $rows = [];
+        $rows       = [];
+        $dateFields = ['publish', 'expire', 'created', 'updated', 'uploaded'];
 
         if (isset($this->data['id'])) {
             $sql = Table\CategoryItems::sql();
@@ -83,7 +84,7 @@ class Category extends AbstractModel
 
             $s = str_replace('ORDER BY', $s . ' ORDER BY', (string)$sql);
 
-            $rows = Table\CategoryItems::execute($s, ['category_id' => $this->id])->rows();
+            $rows = Table\CategoryItems::execute($s, ['category_id' => $this->id])->rows(false);
         }
 
         if (count($rows)) {
@@ -98,12 +99,23 @@ class Category extends AbstractModel
                             'Phire\Content\Model\Content', [$value['content_id']], 'getById', $this->data['filters']
                         );
                     }
-                    $rows[$key] = new \ArrayObject(array_merge((array)$value, $item->toArray()), \ArrayObject::ARRAY_AS_PROPS);
+                    $value = array_merge((array)$value, $item->toArray());
                 } else if (!empty($value['media_id'])) {
                     $media = new \Phire\Media\Model\Media();
                     $media->getById($value['media_id']);
-                    $rows[$key] = new \ArrayObject(array_merge((array)$value, $media->toArray()), \ArrayObject::ARRAY_AS_PROPS);
+                    $value = array_merge((array)$value, $media->toArray());
                 }
+
+                foreach ($value as $ky => $vl) {
+                    if (in_array($ky, $dateFields)) {
+                        $dateValues = $this->formatDateAndTime($vl);
+                        foreach ($dateValues as $k => $v) {
+                            $value[$ky . '_' . $k] = $v;
+                        }
+                    }
+                }
+
+                $rows[$key] = new \ArrayObject($value, \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
