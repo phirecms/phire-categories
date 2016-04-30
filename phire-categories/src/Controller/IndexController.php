@@ -29,7 +29,7 @@ class IndexController extends AbstractController
             if (substr($uri, -1) == '/') {
                 $uri = substr($uri, 0, -1);
             }
-            $category = new Model\Category([], $this->application->module('phire-categories'));
+            $category = new Model\Category();
             $category->getByUri($uri);
 
             if (isset($category->id)) {

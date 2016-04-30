@@ -99,6 +99,51 @@ class Category extends AbstractModel
     }
 
     /**
+     * Get category items
+     *
+     * @param  mixed $id
+     * @return array
+     */
+    public function getCategoryChildren($id)
+    {
+        if (!is_numeric($id)) {
+            $category = Table\Categories::findBy(['title' => $id]);
+            if (isset($category->id)) {
+                $id = $category->id;
+            }
+        }
+
+        $children = Table\Categories::findBy(['parent_id' => $id], ['order' => 'order ASC']);
+
+        $items = [];
+
+        if ($children->hasRows()) {
+            foreach ($children->rows() as $child) {
+                $c = new Category();
+                $c->show_total = $this->show_total;
+                $c->filters = $this->filters;
+                $c->getById($child->id);
+                $childItem = $c->getItems(1);
+                $filtered  = [];
+                if (isset($childItem[0])) {
+                    foreach ($childItem[0] as $key => $value) {
+                        $filtered['item_' . $key] = $value;
+                    }
+                }
+
+                $items[]  = new \ArrayObject(array_merge([
+                    'category_id'    => $child->id,
+                    'category_title' => $child->title,
+                    'category_uri'   => '/category' . $child->uri,
+                    'category_total' => Table\CategoryItems::findBy(['category_id' => $child->id])->count()
+                ], $filtered), \ArrayObject::ARRAY_AS_PROPS);
+            }
+        }
+
+        return $items;
+    }
+
+    /**
      * Get category by ID
      *
      * @param  int $id
