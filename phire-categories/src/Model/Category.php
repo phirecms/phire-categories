@@ -54,12 +54,16 @@ class Category extends AbstractModel
 
         if (isset($this->data['id'])) {
             $sql = Table\CategoryItems::sql();
-
             $sql->select()
                 ->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
                 ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
                 ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
-                ->where('category_id = :category_id');
+                ->where('category_id = :category_id')
+                ->where('media_id IS NOT NULL');
+
+            $s = ' OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (' . $sql->quoteId('publish') .
+                ' <= NOW()) AND ((' . $sql->quoteId('expire') . ' IS NULL) OR (' . $sql->quoteId('expire') .
+                ' > NOW())) AND (' . $sql->quoteId('status') . ' = 1))';
 
             if (null !== $limit) {
                 $page = ((null !== $page) && ((int)$page > 1)) ?
@@ -77,21 +81,29 @@ class Category extends AbstractModel
             }
             $sql->select()->orderBy($by, $order);
 
-            $rows = Table\CategoryItems::execute((string)$sql, ['category_id' => $this->id])->rows();
+            $s = str_replace('ORDER BY', $s . ' ORDER BY', (string)$sql);
+
+            $rows = Table\CategoryItems::execute($s, ['category_id' => $this->id])->rows();
         }
 
-        if (count($rows) && class_exists('Phire\Fields\Model\FieldValue')) {
+        if (count($rows)) {
             foreach ($rows as $key => $value) {
-                if (!empty($value['media_id'])) {
-                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
-                        'Phire\Media\Model\Media', [$value['media_id']], 'getById', $this->data['filters']
-                    );
-                } else {
-                    $item = \Phire\Fields\Model\FieldValue::getModelObject(
-                        'Phire\Content\Model\Content', [$value['content_id']], 'getById', $this->data['filters']
-                    );
+                if (class_exists('Phire\Fields\Model\FieldValue')) {
+                    if (!empty($value['media_id'])) {
+                        $item = \Phire\Fields\Model\FieldValue::getModelObject(
+                            'Phire\Media\Model\Media', [$value['media_id']], 'getById', $this->data['filters']
+                        );
+                    } else {
+                        $item = \Phire\Fields\Model\FieldValue::getModelObject(
+                            'Phire\Content\Model\Content', [$value['content_id']], 'getById', $this->data['filters']
+                        );
+                    }
+                    $rows[$key] = new \ArrayObject(array_merge((array)$value, $item->toArray()), \ArrayObject::ARRAY_AS_PROPS);
+                } else if (!empty($value['media_id'])) {
+                    $media = new \Phire\Media\Model\Media();
+                    $media->getById($value['media_id']);
+                    $rows[$key] = new \ArrayObject(array_merge((array)$value, $media->toArray()), \ArrayObject::ARRAY_AS_PROPS);
                 }
-                $rows[$key] = new \ArrayObject(array_merge((array)$value, $item->toArray()), \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
@@ -370,7 +382,7 @@ class Category extends AbstractModel
      */
     public function hasPages($limit)
     {
-        return (Table\CategoryItems::findBy(['category_id' => $this->id])->count() > $limit);
+        return ($this->getCount() > $limit);
     }
 
     /**
@@ -380,7 +392,19 @@ class Category extends AbstractModel
      */
     public function getCount()
     {
-        return Table\CategoryItems::findBy(['category_id' => $this->id])->count();
+        $sql = Table\CategoryItems::sql();
+        $sql->select(['total_count' => 'COUNT(*)'])
+            ->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
+            ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
+            ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
+            ->where('category_id = :category_id')
+            ->where('media_id IS NOT NULL');
+
+        $s = (string)$sql . ' OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (' . $sql->quoteId('publish') .
+            ' <= NOW()) AND ((' . $sql->quoteId('expire') . ' IS NULL) OR (' . $sql->quoteId('expire') .
+            ' > NOW())) AND (' . $sql->quoteId('status') . ' = 1))';
+
+        return Table\CategoryItems::execute($s, ['category_id' => $this->id])->total_count;
     }
 
     /**
