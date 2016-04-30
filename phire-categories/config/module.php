@@ -60,14 +60,16 @@ return [
                 'priority' => 1000
             ]
         ],
-        'date_format'    => 'n/j/Y',
-        'month_format'   => 'M',
-        'day_format'     => 'j',
-        'year_format'    => 'Y',
-        'time_format'    => 'H:i',
-        'hour_format'    => 'H',
-        'minute_format'  => 'i',
-        'period_format'  => 'A',
+        'datetime_formats' => [
+            'date_format'    => 'n/j/Y',
+            'month_format'   => 'M',
+            'day_format'     => 'j',
+            'year_format'    => 'Y',
+            'time_format'    => 'H:i',
+            'hour_format'    => 'H',
+            'minute_format'  => 'i',
+            'period_format'  => 'A',
+        ],
         'separator'      => '&gt;',
         'filters'        => [
             'strip_tags' => null,

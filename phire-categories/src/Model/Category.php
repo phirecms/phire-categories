@@ -57,13 +57,15 @@ class Category extends AbstractModel
             $sql = Table\CategoryItems::sql();
             $sql->select()
                 ->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
+                ->join(DB_PREFIX . 'content_types', [DB_PREFIX . 'content_types.id' => DB_PREFIX . 'content.type_id'])
                 ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
                 ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
                 ->where('category_id = :category_id')
                 ->where('media_id IS NOT NULL');
 
-            $s = ' OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (' . $sql->quoteId('publish') .
-                ' <= NOW()) AND ((' . $sql->quoteId('expire') . ' IS NULL) OR (' . $sql->quoteId('expire') .
+            $s = ' OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (((' . $sql->quoteId('strict_publishing') .
+                ' = 1) AND (' . $sql->quoteId('publish') . ' <= NOW())) OR (' . $sql->quoteId('strict_publishing') .
+                ' = 0)) AND ((' . $sql->quoteId('expire') . ' IS NULL) OR (' . $sql->quoteId('expire') .
                 ' > NOW())) AND (' . $sql->quoteId('status') . ' = 1))';
 
             if (null !== $limit) {
@@ -608,7 +610,7 @@ class Category extends AbstractModel
             'period' => null
         ];
 
-        if (isset($this->date_format) && !empty($value) && ($value != '0000-00-00 00:00:00') && ($value != '0000-00-00')) {
+        if (isset($this->datetime_formats) && !empty($value) && ($value != '0000-00-00 00:00:00') && ($value != '0000-00-00')) {
             // Has time
             if (strpos($value, ' ') !== false) {
                 $date = substr($value, 0, strpos($value, ' '));
@@ -618,16 +620,16 @@ class Category extends AbstractModel
                 $time = null;
             }
 
-            $values['date']  = date($this->date_format, strtotime($date));
-            $values['month'] = date($this->month_format, strtotime($date));
-            $values['day']   = date($this->day_format, strtotime($date));
-            $values['year']  = date($this->year_format, strtotime($date));
+            $values['date']  = date($this->datetime_formats['date_format'], strtotime($date));
+            $values['month'] = date($this->datetime_formats['month_format'], strtotime($date));
+            $values['day']   = date($this->datetime_formats['day_format'], strtotime($date));
+            $values['year']  = date($this->datetime_formats['year_format'], strtotime($date));
 
             if (null !== $time) {
-                $values['time']   = date($this->time_format, strtotime($time));
-                $values['hour']   = date($this->hour_format, strtotime($time));
-                $values['minute'] = date($this->minute_format, strtotime($time));
-                $values['period'] = date($this->period_format, strtotime($time));
+                $values['time']   = date($this->datetime_formats['time_format'], strtotime($time));
+                $values['hour']   = date($this->datetime_formats['hour_format'], strtotime($time));
+                $values['minute'] = date($this->datetime_formats['minute_format'], strtotime($time));
+                $values['period'] = date($this->datetime_formats['period_format'], strtotime($time));
             }
         }
 

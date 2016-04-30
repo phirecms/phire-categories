@@ -35,6 +35,7 @@ class IndexController extends AbstractController
             if (isset($category->id)) {
                 $category->filters    = ($category->filter) ? $this->application->module('phire-categories')['filters'] : [];
                 $category->show_total = $this->application->module('phire-categories')['show_total'];
+                $category->datetime_formats = $this->application->module('phire-categories')['datetime_formats'];
                 if ($category->hasPages($category->pagination)) {
                     $limit = $category->pagination;
                     $pages = new Paginator($category->getCount(), $limit);

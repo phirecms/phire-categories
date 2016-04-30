@@ -142,6 +142,7 @@ class Category
             $category = new Model\Category();
             $category->show_total = $application->module('phire-categories')['show_total'];
             $category->filters    = $application->module('phire-categories')['filters'];
+            $category->datetime_formats = $application->module('phire-categories')['datetime_formats'];
             $controller->view()->category_nav = $category->getNav($application->module('phire-categories')['nav_config']);
 
             if (($application->isRegistered('phire-templates')) && ($controller->view()->isStream()) &&
@@ -199,6 +200,7 @@ class Category
             $category = new Model\Category();
             $category->show_total = $application->module('phire-categories')['show_total'];
             $category->filters    = $application->module('phire-categories')['filters'];
+            $category->datetime_formats = $application->module('phire-categories')['datetime_formats'];
 
             $catIds       = self::parseCategoryIds($body);
             $catParentIds = self::parseParentCategoryIds($body);
