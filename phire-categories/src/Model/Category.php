@@ -60,13 +60,12 @@ class Category extends AbstractModel
                 ->join(DB_PREFIX . 'content_types', [DB_PREFIX . 'content_types.id' => DB_PREFIX . 'content.type_id'])
                 ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
                 ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
-                ->where('category_id = :category_id')
-                ->where('media_id IS NOT NULL');
+                ->where('category_id = :category_id');
 
-            $s = ' OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (((' . $sql->quoteId('strict_publishing') .
+            $s = ' AND ((' . $sql->quoteId('media_id') . ' IS NOT NULL) OR ((' . $sql->quoteId('media_id') . ' IS NULL) AND (((' . $sql->quoteId('strict_publishing') .
                 ' = 1) AND (' . $sql->quoteId('publish') . ' <= NOW())) OR (' . $sql->quoteId('strict_publishing') .
                 ' = 0)) AND ((' . $sql->quoteId('expire') . ' IS NULL) OR (' . $sql->quoteId('expire') .
-                ' > NOW())) AND (' . $sql->quoteId('status') . ' = 1))';
+                ' > NOW())) AND (' . $sql->quoteId('status') . ' = 1)))';
 
             if (null !== $limit) {
                 $page = ((null !== $page) && ((int)$page > 1)) ?

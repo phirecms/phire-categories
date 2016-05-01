@@ -36,7 +36,7 @@ class IndexController extends AbstractController
                 $category->filters    = ($category->filter) ? $this->application->module('phire-categories')['filters'] : [];
                 $category->show_total = $this->application->module('phire-categories')['show_total'];
                 $category->datetime_formats = $this->application->module('phire-categories')['datetime_formats'];
-                if ($category->hasPages($category->pagination)) {
+                if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
                     $limit = $category->pagination;
                     $pages = new Paginator($category->getCount(), $limit);
                     $pages->useInput(true);
@@ -115,14 +115,14 @@ class IndexController extends AbstractController
         $this->viewPath = __DIR__ . '/../../view';
         parent::prepareView($category);
 
-        $this->view->date_format   = $this->application->module('phire-categories')['date_format'];
-        $this->view->month_format  = $this->application->module('phire-categories')['month_format'];
-        $this->view->day_format    = $this->application->module('phire-categories')['day_format'];
-        $this->view->year_format   = $this->application->module('phire-categories')['year_format'];
-        $this->view->time_format   = $this->application->module('phire-categories')['time_format'];
-        $this->view->hour_format   = $this->application->module('phire-categories')['hour_format'];
-        $this->view->minute_format = $this->application->module('phire-categories')['minute_format'];
-        $this->view->minute_format = $this->application->module('phire-categories')['minute_format'];
+        $this->view->date_format   = $this->application->module('phire-categories')['datetime_formats']['date_format'];
+        $this->view->month_format  = $this->application->module('phire-categories')['datetime_formats']['month_format'];
+        $this->view->day_format    = $this->application->module('phire-categories')['datetime_formats']['day_format'];
+        $this->view->year_format   = $this->application->module('phire-categories')['datetime_formats']['year_format'];
+        $this->view->time_format   = $this->application->module('phire-categories')['datetime_formats']['time_format'];
+        $this->view->hour_format   = $this->application->module('phire-categories')['datetime_formats']['hour_format'];
+        $this->view->minute_format = $this->application->module('phire-categories')['datetime_formats']['minute_format'];
+        $this->view->minute_format = $this->application->module('phire-categories')['datetime_formats']['minute_format'];
         $this->view->separator     = $this->application->module('phire-categories')['separator'];
     }
 

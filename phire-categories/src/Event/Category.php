@@ -155,7 +155,7 @@ class Category
                 if (count($catIds) > 0) {
                     foreach ($catIds as $key => $value) {
                         $category->getById($value);
-                        if ($category->hasPages($category->pagination)) {
+                        if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
                             $limit = $category->pagination;
                             $pages = new \Pop\Paginator\Paginator($category->getCount(), $limit);
                             $pages->useInput(true);
@@ -208,7 +208,7 @@ class Category
             if (count($catIds) > 0) {
                 foreach ($catIds as $key => $value) {
                     $category->getById($value);
-                    if ($category->hasPages($category->pagination)) {
+                    if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
                         $limit = $category->pagination;
                         $pages = new \Pop\Paginator\Paginator($category->getCount(), $limit);
                         $pages->useInput(true);
