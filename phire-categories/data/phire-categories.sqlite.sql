@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS "[{prefix}]category_items" (
   CONSTRAINT "fk_category_media_id" FOREIGN KEY ("media_id") REFERENCES "[{prefix}]media" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 ) ;
 
-CREATE INDEX "category_item_id" ON "[{prefix}]content_to_categories" ("category_id");
-CREATE INDEX "category_content_id" ON "[{prefix}]content_to_categories" ("content_id");
-CREATE INDEX "category_media_id" ON "[{prefix}]content_to_categories" ("media_id");
+CREATE INDEX "category_item_id" ON "[{prefix}]category_items" ("category_id");
+CREATE INDEX "category_content_id" ON "[{prefix}]category_items" ("content_id");
+CREATE INDEX "category_media_id" ON "[{prefix}]category_items" ("media_id");
 
