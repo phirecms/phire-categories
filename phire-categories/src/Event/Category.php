@@ -159,8 +159,7 @@ class Category
                         if (isset($value['limit']) && ($value['limit'] > 0) && ($category->hasPages($value['limit']))) {
                             $limit = $value['limit'];
                             $categoryName .= '_' . $limit;
-                            $pages = new \Pop\Paginator\Paginator($category->getCount(), $limit);
-                            $pages->useInput(true);
+                            $pages = null;
                         } else if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
                             $limit = $category->pagination;
                             $pages = new \Pop\Paginator\Paginator($category->getCount(), $limit);
@@ -170,7 +169,9 @@ class Category
                             $pages = null;
                         }
 
-                        $controller->view()->pages = $pages;
+                        if (null !== $pages) {
+                            $controller->view()->pages = $pages;
+                        }
                         $controller->view()->{$categoryName} = $category->getItems($limit, $controller->request()->getQuery('page'));
                     }
                 }
@@ -231,8 +232,12 @@ class Category
 
             if (count($catIds) > 0) {
                 foreach ($catIds as $key => $value) {
-                    $category->getById($value);
-                    if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
+                    $category->getById($value['id']);
+                    $categoryName = 'category_' . $value['id'];
+                    if (isset($value['limit']) && ($value['limit'] > 0) && ($category->hasPages($value['limit']))) {
+                        $limit = $value['limit'];
+                        $pages = null;
+                    } else if (($category->pagination > 0) && ($category->hasPages($category->pagination))) {
                         $limit = $category->pagination;
                         $pages = new \Pop\Paginator\Paginator($category->getCount(), $limit);
                         $pages->useInput(true);
@@ -241,15 +246,22 @@ class Category
                         $pages = null;
                     }
 
-                    $categoryName = 'category_' . $value;
-                    $controller->view()->pages = $pages;
+                    if (null !== $pages) {
+                        $controller->view()->pages = $pages;
+                    }
                     $controller->view()->{$categoryName} = $category->getItems($limit, $controller->request()->getQuery('page'));
                 }
             }
             if (count($catParentIds) > 0) {
                 foreach ($catParentIds as $key => $value) {
-                    $categoryName = 'categories_' . $value;
-                    $controller->view()->{$categoryName} = $category->getCategoryChildren($value);
+                    if (isset($value['limit']) && ($value['limit'] > 0)) {
+                        $limit        = $value['limit'];
+                        $categoryName = 'categories_' . $value['id'] . '_' . $limit;
+                    } else {
+                        $limit        = null;
+                        $categoryName = 'categories_' . $value['id'];
+                    }
+                    $controller->view()->{$categoryName} = $category->getCategoryChildren($value['id'], $limit);
                 }
             }
 
@@ -363,8 +375,8 @@ class Category
 
         if (isset($cats[0]) && isset($cats[0][0])) {
             foreach ($cats[0] as $cat) {
-                $id    = substr($cat, (strpos($cat, '[{category_') + 11));
-                $id    = substr($id, 0, strpos($id, '}]'));
+                $id = substr($cat, (strpos($cat, '[{category_') + 11));
+                $id = substr($id, 0, strpos($id, '}]'));
                 if (strpos($id, '_') !== false) {
                     $idAry = explode('_', $id);
                     $ids[] = [
@@ -398,8 +410,8 @@ class Category
 
         if (isset($cats[0]) && isset($cats[0][0])) {
             foreach ($cats[0] as $cat) {
-                $id    = substr($cat, (strpos($cat, '[{categories_') + 13));
-                $ids[] = substr($id, 0, strpos($id, '}]'));
+                $id = substr($cat, (strpos($cat, '[{categories_') + 13));
+                $id = substr($id, 0, strpos($id, '}]'));
                 if (strpos($id, '_') !== false) {
                     $idAry = explode('_', $id);
                     $ids[] = [
