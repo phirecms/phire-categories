@@ -55,8 +55,11 @@ class Category extends AbstractModel
 
         if (isset($this->data['id'])) {
             $sql = Table\CategoryItems::sql();
-            $sql->select()
-                ->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
+            $sql->select([
+                0 => '*',
+                'content_title' => DB_PREFIX . 'content.title',
+                'media_title'   => DB_PREFIX . 'media.title',
+            ])->join(DB_PREFIX . 'content', [DB_PREFIX . 'category_items.content_id' => DB_PREFIX . 'content.id'])
                 ->join(DB_PREFIX . 'content_types', [DB_PREFIX . 'content_types.id' => DB_PREFIX . 'content.type_id'])
                 ->join(DB_PREFIX . 'media', [DB_PREFIX . 'category_items.media_id' => DB_PREFIX . 'media.id'])
                 ->join(DB_PREFIX . 'media_libraries', [DB_PREFIX . 'media_libraries.id' => DB_PREFIX . 'media.library_id'])
@@ -127,9 +130,10 @@ class Category extends AbstractModel
      * Get category items
      *
      * @param  mixed $id
+     * @param  int   $limit
      * @return array
      */
-    public function getCategoryChildren($id)
+    public function getCategoryChildren($id, $limit = null)
     {
         if (!is_numeric($id)) {
             $category = Table\Categories::findBy(['title' => $id]);
@@ -138,7 +142,13 @@ class Category extends AbstractModel
             }
         }
 
-        $children = Table\Categories::findBy(['parent_id' => $id], ['order' => 'order ASC']);
+        $options = ['order' => 'order ASC'];
+
+        if (null !== $limit) {
+            $options['limit'] = (int)$limit;
+        }
+
+        $children = Table\Categories::findBy(['parent_id' => $id], $options);
 
         $items = [];
 
