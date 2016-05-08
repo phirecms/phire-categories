@@ -1,0 +1,30 @@
+{
+    "name": "phirecms/phire-categories",
+    "description": "Categories module for Phire CMS",
+    "keywords": [
+        "content management system",
+        "cms",
+        "phire",
+        "phire cms",
+        "php cms"
+    ],
+    "homepage": "http://www.phirecms.org/",
+    "license": "New BSD",
+    "authors": [
+        {
+            "name": "Nick Sagona",
+            "email": "dev@nolainteractive.com",
+            "homepage": "http://www.nolainteractive.com/"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Phire\\Categories\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
