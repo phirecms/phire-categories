@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * phire-categories resources
+ */
 return [
     'categories' => [
         'index',

@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * phire-categories routes
+ */
 return [
     '/category/*' => [
         'controller' => 'Phire\Categories\Controller\IndexController',

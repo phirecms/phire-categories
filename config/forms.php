@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * phire-categories form configuration
+ */
 return [
     'Phire\Categories\Form\Category' => [
         [

@@ -1,11 +1,32 @@
 <?php
+/**
+ * Phire Categories Module
+ *
+ * @link       https://github.com/phirecms/phire-categories
+ * @author     Nick Sagona, III <dev@nolainteractive.com>
+ * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @license    http://www.phirecms.org/license     New BSD License
+ */
 
+/**
+ * @namespace
+ */
 namespace Phire\Categories\Form;
 
 use Pop\Form\Form;
 use Pop\Validator;
 use Phire\Categories\Table;
 
+/**
+ * Category Form class
+ *
+ * @category   Phire\Categories
+ * @package    Phire\Categories
+ * @author     Nick Sagona, III <dev@nolainteractive.com>
+ * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @license    http://www.phirecms.org/license     New BSD License
+ * @version    1.0.0
+ */
 class Category extends Form
 {
 

@@ -1,5 +1,16 @@
 <?php
+/**
+ * Phire Categories Module
+ *
+ * @link       https://github.com/phirecms/phire-categories
+ * @author     Nick Sagona, III <dev@nolainteractive.com>
+ * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @license    http://www.phirecms.org/license     New BSD License
+ */
 
+/**
+ * @namespace
+ */
 namespace Phire\Categories\Controller;
 
 use Phire\Categories\Model;
@@ -7,6 +18,16 @@ use Phire\Categories\Table;
 use Phire\Controller\AbstractController;
 use Pop\Paginator\Paginator;
 
+/**
+ * Category Index Controller class
+ *
+ * @category   Phire\Categories
+ * @package    Phire\Categories
+ * @author     Nick Sagona, III <dev@nolainteractive.com>
+ * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @license    http://www.phirecms.org/license     New BSD License
+ * @version    1.0.0
+ */
 class IndexController extends AbstractController
 {
 
