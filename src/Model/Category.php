@@ -140,7 +140,7 @@ class Category extends AbstractModel
                     }
                 }
 
-                $rows[$key] = new \ArrayObject($value, \ArrayObject::ARRAY_AS_PROPS);
+                $rows[$key] = new \ArrayObject($value->getColumns(), \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
@@ -551,8 +551,8 @@ class Category extends AbstractModel
     /**
      * Get category navigation children
      *
-     * @param  \ArrayObject|array $category
-     * @param  int                $depth
+     * @param  mixed $category
+     * @param  int   $depth
      * @return array
      */
     protected function getNavChildren($category, $depth = 0)
