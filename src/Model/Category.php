@@ -140,7 +140,7 @@ class Category extends AbstractModel
                     }
                 }
 
-                $rows[$key] = new \ArrayObject($value->getColumns(), \ArrayObject::ARRAY_AS_PROPS);
+                $rows[$key] = new \ArrayObject($value, \ArrayObject::ARRAY_AS_PROPS);
             }
         }
 
